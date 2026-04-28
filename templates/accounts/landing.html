@@ -4,10 +4,10 @@
 
 {% block content %}
 <div class="auth-container">
-    <div class="auth-card" style="max-width: 550px;">
-        <h1 class="text-white fw-bold mb-4">Request Access</h1>
-        <p class="text-gray mb-4">Complete the application below to join our exclusive learning community.</p>
-        
+    <div class="auth-card" style="max-width: 520px;">
+        <h1 class="text-gradient fw-bold mb-2">Request Access</h1>
+        <p class="text-gray mb-4">Complete the form below to join our exclusive learning community.</p>
+
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}
@@ -23,7 +23,7 @@
         </form>
         <div class="mt-4 text-center">
             <span class="text-gray">Already have access?</span>
-            <a href="{% url 'login' %}" class="text-white text-decoration-none fw-bold ms-1">Sign In</a>.
+            <a href="{% url 'login' %}" class="text-gradient text-decoration-none fw-bold ms-1">Sign In</a>.
         </div>
     </div>
 </div>
@@ -36,11 +36,19 @@
         padding: 0 !important;
         margin-top: 0 !important;
     }
-    input.form-control, textarea.form-control {
-        background-color: #333 !important;
-        border: none !important;
+    input.form-control, textarea.form-control, select.form-select {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
         color: white !important;
-        padding: 12px 20px !important;
+        padding: 14px 16px !important;
+        border-radius: 10px !important;
     }
+    input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
+        background-color: rgba(255,255,255,0.12) !important;
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+        color: white !important;
+    }
+    input[type="file"] { padding: 10px !important; }
 </style>
 {% endblock %}

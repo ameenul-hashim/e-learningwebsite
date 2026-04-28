@@ -5,10 +5,10 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h1 class="text-white fw-bold mb-4">Sign In</h1>
-        
+        <h1 class="text-gradient fw-bold mb-4">Sign In</h1>
+
         {% if form.non_field_errors %}
-            <div class="alert alert-danger py-2 small mb-4">
+            <div class="alert alert-danger py-2 small mb-4" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ff6b7a; border-radius: 10px;">
                 {% for error in form.non_field_errors %}
                     {{ error }}
                 {% endfor %}
@@ -17,7 +17,7 @@
 
         <form method="post">
             {% csrf_token %}
-            
+
             <!-- Username Field -->
             <div class="mb-3">
                 <label for="id_username" class="form-label text-gray small text-uppercase fw-bold">Username</label>
@@ -32,8 +32,8 @@
                 <label for="id_password" class="form-label text-gray small text-uppercase fw-bold">Password</label>
                 <div class="input-group">
                     {{ form.password }}
-                    <button class="btn btn-outline-secondary border-0 bg-dark-subtle px-3" type="button" id="togglePassword">
-                        <i class="bi bi-eye-slash text-gray" id="toggleIcon"></i>
+                    <button class="btn px-3 toggle-btn" type="button" id="togglePassword">
+                        <i class="bi bi-eye-slash" id="toggleIcon"></i>
                     </button>
                 </div>
                 {% for error in form.password.errors %}
@@ -44,9 +44,9 @@
             <button type="submit" class="btn btn-netflix">Sign In</button>
         </form>
 
-        <div class="mt-4">
+        <div class="mt-4 text-center">
             <span class="text-gray">New to EduStream?</span>
-            <a href="{% url 'landing' %}" class="text-white text-decoration-none fw-bold ms-1">Request Access now</a>.
+            <a href="{% url 'landing' %}" class="text-gradient text-decoration-none fw-bold ms-1">Request Access now</a>.
         </div>
     </div>
 </div>
@@ -60,24 +60,28 @@
         padding: 0 !important;
         margin-top: 0 !important;
     }
-    .bg-dark-subtle { background-color: #333 !important; }
     input.form-control {
-        background-color: #333 !important;
-        border: none !important;
+        background-color: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
         color: white !important;
-        padding: 12px 20px !important;
+        padding: 14px 16px !important;
+        border-radius: 10px !important;
     }
     input.form-control:focus {
-        background-color: #444 !important;
-        color: white;
-        box-shadow: none;
+        background-color: rgba(255,255,255,0.12) !important;
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.15) !important;
+        color: white !important;
     }
-    .input-group button {
-        border-radius: 0 4px 4px 0;
+    .toggle-btn {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-left: none;
+        color: var(--text-secondary);
+        border-radius: 0 10px 10px 0;
     }
-    .input-group input {
-        border-radius: 4px 0 0 4px !important;
-    }
+    .toggle-btn:hover { color: var(--accent-primary); }
+    .input-group input { border-radius: 10px 0 0 10px !important; }
 </style>
 
 <script>
@@ -85,13 +89,9 @@
         const togglePassword = document.querySelector('#togglePassword');
         const password = document.querySelector('#id_password');
         const icon = document.querySelector('#toggleIcon');
-
         togglePassword.addEventListener('click', function() {
-            // toggle the type attribute
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
-            
-            // toggle the icon
             icon.classList.toggle('bi-eye');
             icon.classList.toggle('bi-eye-slash');
         });
