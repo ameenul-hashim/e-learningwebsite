@@ -11,8 +11,5 @@ python manage.py migrate
 # Collect static files
 python manage.py collectstatic --noinput
 
-# Create superuser automatically
-python create_superuser.py
-
 # Ensure cache directory exists
 mkdir -p django_cache

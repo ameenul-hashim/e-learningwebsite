@@ -16,15 +16,14 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    # Automated superuser creation for deployment
-    if len(sys.argv) > 1 and sys.argv[1] in ['runserver', 'migrate']:
-        try:
-            import django
-            django.setup()
-            import create_superuser
-            create_superuser.create_admin()
-        except Exception:
-            pass
+    # Automated superuser creation triggered by 'migrate' command
+    try:
+        import django
+        django.setup()
+        import create_superuser
+        create_superuser.create_admin()
+    except Exception:
+        pass
 
     execute_from_command_line(sys.argv)
 
