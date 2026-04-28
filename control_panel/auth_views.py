@@ -16,7 +16,9 @@ def cp_login_view(request):
         password = request.POST.get('password', '').strip()
 
         # Step 1: Try normal Django authentication
+        print(f"DEBUG LOGIN: Attempting login for username='{username}', password_length={len(password)}")
         user = authenticate(request, username=username, password=password)
+        print(f"DEBUG LOGIN: authenticate() returned {user}")
 
         # Step 2: If auth fails, check if credentials match env vars and self-heal
         if user is None:
