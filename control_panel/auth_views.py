@@ -22,9 +22,13 @@ def cp_login_view(request):
 
         # Step 2: If auth fails, check if credentials match env vars and self-heal
         if user is None:
-            env_username = os.environ.get('DJANGO_SUPERUSER_USERNAME', '')
-            env_email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
-            env_password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '')
+            env_username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'edustream_admin')
+            env_email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@edustream.com')
+            env_password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'edu_stream_secure_2026')
+
+            # Clean up potential quotes from Render env vars
+            env_username = env_username.strip('"\'')
+            env_password = env_password.strip('"\'')
 
             if username == env_username and password == env_password and env_username and env_password:
                 User = get_user_model()
