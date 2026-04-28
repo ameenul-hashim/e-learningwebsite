@@ -16,15 +16,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    # Automated superuser creation triggered by 'migrate' command
-    try:
-        import django
-        django.setup()
-        import create_superuser
-        create_superuser.create_admin()
-    except Exception:
-        pass
-
     execute_from_command_line(sys.argv)
 
 if __name__ == '__main__':

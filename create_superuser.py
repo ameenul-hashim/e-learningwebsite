@@ -1,13 +1,14 @@
 import os
 import sys
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+django.setup()
+
 from django.contrib.auth import get_user_model
 
 def create_admin():
     print("Superuser script triggered")
-    
-    # Only execute during the 'migrate' command phase
-    if 'migrate' not in sys.argv:
-        return
 
     username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
     email = os.environ.get('DJANGO_SUPERUSER_EMAIL')
@@ -29,7 +30,4 @@ def create_admin():
         print("Missing environment variables, skipping superuser creation")
 
 if __name__ == "__main__":
-    import django
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-    django.setup()
     create_admin()
