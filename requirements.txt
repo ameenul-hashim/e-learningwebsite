@@ -1,0 +1,8 @@
+django
+gunicorn
+whitenoise
+python-dotenv
+psycopg[binary]
+dj-database-url
+djangorestframework
+celery

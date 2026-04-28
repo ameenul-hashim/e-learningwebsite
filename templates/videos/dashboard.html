@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore - EduStream{% endblock %}
+
+{% block content %}
+<div class="ott-container">
+    <!-- Search Bar -->
+    <div class="search-section px-5 mb-4">
+        <form action="{% url 'dashboard' %}" method="get" class="d-flex">
+            <div class="input-group search-group">
+                <span class="input-group-text bg-dark border-0"><i class="bi bi-search text-gray"></i></span>
+                <input type="text" name="q" class="form-control form-control-dark" placeholder="Titles, categories..." value="{{ query|default:'' }}">
+            </div>
+        </form>
+    </div>
+
+    <!-- Continue Watching -->
+    {% if history %}
+    <div class="category-section mb-5">
+        <h2 class="category-title">Continue Watching</h2>
+        <div class="video-row">
+            {% for item in history %}
+            <div class="video-card">
+                <a href="{% url 'watch_video' item.video.id %}" class="text-decoration-none">
+                    <div class="card-img-wrapper">
+                        <img src="{{ item.video.thumbnail_url }}" alt="{{ item.video.title }}" loading="lazy">
+                        <div class="card-overlay">
+                            <i class="bi bi-play-fill"></i>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <h3 class="video-title">{{ item.video.title }}</h3>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Categorized Rows -->
+    {% for category in categories %}
+    <div class="category-section mb-5">
+        <h2 class="category-title">{{ category.name }}</h2>
+        <div class="video-row">
+            {% for video in category.videos.all %}
+            <div class="video-card">
+                <a href="{% url 'watch_video' video.id %}" class="text-decoration-none">
+                    <div class="card-img-wrapper">
+                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" loading="lazy">
+                        <div class="card-overlay">
+                            <i class="bi bi-play-fill"></i>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <h3 class="video-title">{{ video.title }}</h3>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+        <h3 class="text-gray">No categories found. Add some in Admin!</h3>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    main.container { max-width: 100% !important; padding: 0 !important; margin-top: 0 !important; }
+    .ott-container { padding-top: 100px; background-color: #141414; min-height: 100vh; }
+    
+    .category-section { padding: 0 4%; }
+    .category-title { color: #e5e5e5; font-size: 1.4vw; font-weight: 700; margin-bottom: 0.5em; }
+    
+    .video-row { 
+        display: flex; 
+        overflow-x: scroll; 
+        gap: 10px; 
+        padding: 20px 0;
+        scrollbar-width: none; /* Firefox */
+    }
+    .video-row::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+    .video-card { 
+        min-width: 300px; 
+        flex: 0 0 auto; 
+        transition: transform 0.3s ease;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .video-card:hover { transform: scale(1.05); z-index: 2; }
+    
+    .card-img-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; }
+    .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .card-overlay { 
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    .video-card:hover .card-overlay { opacity: 1; }
+    .card-overlay i { font-size: 3rem; color: white; }
+
+    .card-info { padding: 10px 0; }
+    .video-title { font-size: 1rem; color: white; margin: 0; font-weight: 600; }
+    
+    .search-group { max-width: 400px; }
+    .text-gray { color: #b3b3b3; }
+</style>
+{% endblock %}

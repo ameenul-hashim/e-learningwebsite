@@ -1,0 +1,126 @@
+:root {
+    --primary-color: #e50914; /* Netflix Red */
+    --bg-dark: #141414;
+    --card-bg: #1f1f1f;
+    --text-light: #ffffff;
+    --text-gray: #b3b3b3;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    background-color: rgba(0, 0, 0, 0.9) !important;
+    padding: 1rem 4%;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    color: var(--primary-color) !important;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    padding: 120px 4% 50px; /* Top padding for fixed navbar */
+}
+
+.video-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.video-card iframe {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border: none;
+}
+
+.video-card-content {
+    padding: 15px;
+}
+
+.video-card-content h3 {
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+    color: var(--text-light);
+}
+
+.video-card-content p {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Authentication Pages */
+.auth-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c2-10bd-4519-998f-f358c7a815a6/4e0c4a4e-1b3d-4c3e-8e8e-8e8e8e8e8e8e/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_large.jpg');
+    background-size: cover;
+}
+
+.auth-card {
+    background-color: rgba(0, 0, 0, 0.75);
+    padding: 60px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 450px;
+}
+
+.btn-netflix {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.btn-netflix:hover {
+    background-color: #b20710;
+    color: white;
+}
+
+.form-control-dark {
+    background-color: #333 !important;
+    border: none !important;
+    color: white !important;
+    padding: 12px !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #141414;
+}
+::-webkit-scrollbar-thumb {
+    background: #333;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

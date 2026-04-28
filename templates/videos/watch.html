@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Watching: {{ video.title }} - EduStream{% endblock %}
+
+{% block content %}
+<div class="watch-container">
+    <div class="video-player-wrapper px-md-5">
+        <div class="ratio ratio-16x9 shadow-lg">
+            <iframe 
+                src="{{ video.embed_url }}?autoplay=1" 
+                title="{{ video.title }}" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+        
+        <div class="video-details mt-4 text-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="fw-bold h2">{{ video.title }}</h1>
+                    <p class="text-gray">{{ video.category.name }} • {{ video.created_at|date:"M d, Y" }}</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="description-box p-3 rounded bg-dark-subtle">
+                <p class="mb-0">You are watching secure content provided by EduStream. Sharing or unauthorized recording is strictly prohibited.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    main.container { max-width: 100% !important; padding: 0 !important; margin-top: 0 !important; }
+    .watch-container { padding-top: 100px; padding-bottom: 50px; background-color: #141414; min-height: 100vh; }
+    .video-player-wrapper { max-width: 1200px; margin: 0 auto; }
+    .text-gray { color: #b3b3b3; }
+    .bg-dark-subtle { background-color: #1f1f1f !important; }
+</style>
+{% endblock %}

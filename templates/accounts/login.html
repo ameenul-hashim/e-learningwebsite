@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - EduStream{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="text-white fw-bold mb-4">Sign In</h1>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-netflix">Sign In</button>
+        </form>
+        <div class="mt-4">
+            <span class="text-gray">New to EduStream?</span>
+            <a href="{% url 'landing' %}" class="text-white text-decoration-none fw-bold ms-1">Request Access now</a>.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Ensure the main container doesn't restrict the background */
+    main.container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+    }
+    input.form-control {
+        background-color: #333 !important;
+        border: none !important;
+        color: white !important;
+        padding: 12px 20px !important;
+    }
+</style>
+{% endblock %}
