@@ -1,0 +1,105 @@
+{% extends 'control_panel/base_cp.html' %}
+
+{% block title %}Manage Videos - EduStream{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold">Video Management</h2>
+        <p class="text-muted">Upload and organize your YouTube content by subject.</p>
+    </div>
+    <button class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#addVideoModal">
+        <i class="bi bi-plus-lg"></i> Add New Video
+    </button>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Thumbnail</th>
+                    <th>Video Title</th>
+                    <th>Subject / Category</th>
+                    <th>YouTube ID</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for video in videos %}
+                <tr>
+                    <td style="width: 120px;">
+                        <img src="{{ video.thumbnail_url }}" class="img-fluid rounded" alt="thumb">
+                    </td>
+                    <td>
+                        <div class="fw-bold">{{ video.title }}</div>
+                        <div class="small text-muted">Added: {{ video.created_at|date:"d M, Y" }}</div>
+                    </td>
+                    <td>
+                        {% if video.category %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle px-3">
+                                {{ video.category.name }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted small">No Subject</span>
+                        {% endif %}
+                    </td>
+                    <td><code>{{ video.youtube_id }}</code></td>
+                    <td class="text-end">
+                        <a href="https://www.youtube.com/watch?v={{ video.youtube_id }}" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'cp_delete_video' video.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">No videos found. Start by adding one!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Video Modal -->
+<div class="modal fade" id="addVideoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Add New Content</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Video Title</label>
+                        <input type="text" name="title" class="form-control bg-light" placeholder="Enter video title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">YouTube URL</label>
+                        <input type="url" name="youtube_url" class="form-control bg-light" placeholder="https://www.youtube.com/watch?v=..." required>
+                        <div class="form-text small">Use the full URL from your browser address bar.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Subject (Category)</label>
+                        <select name="category" class="form-select bg-light" required>
+                            <option value="">Select a Subject...</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light p-3">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Save Video</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

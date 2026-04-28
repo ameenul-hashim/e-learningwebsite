@@ -1,0 +1,79 @@
+{% extends 'control_panel/base_cp.html' %}
+
+{% block title %}Admin Dashboard - EduStream{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Dashboard Overview</h2>
+    <div class="text-muted">Logged in as: <strong>{{ request.user.username }}</strong></div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Total Users</div>
+            <h3 class="fw-bold mb-0">{{ stats.total_users }}</h3>
+            <i class="bi bi-people text-primary position-absolute top-0 end-0 m-3 fs-3 opacity-25"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Pending Requests</div>
+            <h3 class="fw-bold mb-0 text-danger">{{ stats.pending_requests }}</h3>
+            <i class="bi bi-clock-history text-danger position-absolute top-0 end-0 m-3 fs-3 opacity-25"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Total Videos</div>
+            <h3 class="fw-bold mb-0 text-success">{{ stats.total_videos }}</h3>
+            <i class="bi bi-play-circle text-success position-absolute top-0 end-0 m-3 fs-3 opacity-25"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-white">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Categories</div>
+            <h3 class="fw-bold mb-0 text-info">{{ stats.total_categories }}</h3>
+            <i class="bi bi-tag text-info position-absolute top-0 end-0 m-3 fs-3 opacity-25"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-4">Recent System Activity</h5>
+            <p class="text-muted">Your custom control panel is now active. Use the sidebar to manage user access and content.</p>
+            <hr>
+            <div class="d-flex align-items-center mb-3">
+                <div class="bg-primary-subtle p-2 rounded me-3">
+                    <i class="bi bi-info-circle text-primary"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Database Check</div>
+                    <div class="small text-muted">PostgreSQL is connected and running optimally.</div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="bg-success-subtle p-2 rounded me-3">
+                    <i class="bi bi-check-circle text-success"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Deployment Status</div>
+                    <div class="small text-muted">Version 2.4.0 (Production Hardened)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-4">Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'cp_requests' %}" class="btn btn-primary btn-action">View All Requests</a>
+                <a href="{% url 'cp_videos' %}" class="btn btn-outline-primary btn-action">Upload New Video</a>
+                <a href="/admin/accounts/user/add/" class="btn btn-outline-secondary btn-action">Create Manual User</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

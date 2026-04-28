@@ -17,6 +17,7 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('', include('accounts.urls')),
     path('', include('videos.urls')),
+    path('', include('control_panel.urls')),
     
     # API Endpoints
     path('api/', include(router.urls)),

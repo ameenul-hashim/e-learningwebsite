@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduStream Control Panel{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-dark: #1a1a2e;
+            --secondary-dark: #16213e;
+            --accent-blue: #0f3460;
+            --text-light: #e94560;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background-color: var(--primary-dark);
+            color: white;
+            z-index: 1000;
+            padding-top: 20px;
+        }
+
+        .sidebar-brand {
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-light);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-link {
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: var(--accent-blue);
+            color: white;
+            border-left: 4px solid var(--text-light);
+        }
+
+        .sidebar-link i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .stat-card {
+            padding: 25px;
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .btn-action {
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-shield-lock-fill"></i> EDUSTREAM CP
+        </div>
+        
+        <a href="{% url 'cp_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a href="{% url 'cp_requests' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_requests' %}active{% endif %}">
+            <i class="bi bi-person-plus"></i> Access Requests
+        </a>
+        <a href="{% url 'cp_videos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_videos' %}active{% endif %}">
+            <i class="bi bi-collection-play"></i> Manage Videos
+        </a>
+        <a href="/admin/" class="sidebar-link" target="_blank">
+            <i class="bi bi-gear"></i> System Settings
+        </a>
+        <a href="{% url 'dashboard' %}" class="sidebar-link">
+            <i class="bi bi-arrow-left-circle"></i> Exit to Site
+        </a>
+    </div>
+
+    <div class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
