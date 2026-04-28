@@ -2,6 +2,7 @@ django
 gunicorn
 whitenoise
 python-dotenv
+django-dotenv
 psycopg[binary]
 dj-database-url
 djangorestframework
