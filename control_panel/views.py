@@ -1,11 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.models import AccessRequest, User
 from videos.models import Video, Category
-from django.utils import timezone
+from functools import wraps
 
-@staff_member_required
+
+def cp_admin_required(view_func):
+    """
+    Custom decorator: redirects to /control-panel/login/ if not staff.
+    """
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return redirect('cp_login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@cp_admin_required
 def dashboard(request):
     """
     Main admin dashboard overview.
@@ -18,7 +31,8 @@ def dashboard(request):
     }
     return render(request, 'control_panel/dashboard.html', {'stats': stats})
 
-@staff_member_required
+
+@cp_admin_required
 def manage_requests(request):
     """
     Handle user access requests.
@@ -30,13 +44,14 @@ def manage_requests(request):
         'history': history
     })
 
-@staff_member_required
+
+@cp_admin_required
 def approve_request(request, pk):
     """
     Approve an access request and create a user account.
     """
     access_req = get_object_or_404(AccessRequest, pk=pk)
-    
+
     # Check if user already exists
     if User.objects.filter(email=access_req.email).exists():
         messages.error(request, f"User with email {access_req.email} already exists.")
@@ -44,23 +59,24 @@ def approve_request(request, pk):
         # Generate a simple username from email if not provided
         username = access_req.email.split('@')[0]
         password = User.objects.make_random_password()
-        
+
         user = User.objects.create_user(
             username=username,
             email=access_req.email,
             password=password,
             is_verified=True
         )
-        
+
         access_req.status = 'approved'
         access_req.save()
-        
+
         # In a real app, you'd send an email here with credentials
         messages.success(request, f"Approved! Account created for {username}. Temp Password: {password}")
-        
+
     return redirect('cp_requests')
 
-@staff_member_required
+
+@cp_admin_required
 def decline_request(request, pk):
     """
     Decline an access request.
@@ -71,19 +87,20 @@ def decline_request(request, pk):
     messages.info(request, f"Request from {access_req.name} declined.")
     return redirect('cp_requests')
 
-@staff_member_required
+
+@cp_admin_required
 def manage_videos(request):
     """
     Manage video catalog.
     """
     videos = Video.objects.select_related('category').all().order_by('-created_at')
     categories = Category.objects.all()
-    
+
     if request.method == 'POST':
         title = request.POST.get('title')
         youtube_url = request.POST.get('youtube_url')
         category_id = request.POST.get('category')
-        
+
         if title and youtube_url:
             category = Category.objects.get(id=category_id) if category_id else None
             Video.objects.create(
@@ -93,13 +110,14 @@ def manage_videos(request):
             )
             messages.success(request, f"Video '{title}' added successfully.")
             return redirect('cp_videos')
-            
+
     return render(request, 'control_panel/videos.html', {
         'videos': videos,
         'categories': categories
     })
 
-@staff_member_required
+
+@cp_admin_required
 def delete_video(request, pk):
     """
     Delete a video.

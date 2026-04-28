@@ -105,12 +105,16 @@
         <a href="{% url 'cp_videos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_videos' %}active{% endif %}">
             <i class="bi bi-collection-play"></i> Manage Videos
         </a>
-        <a href="/admin/" class="sidebar-link" target="_blank">
-            <i class="bi bi-gear"></i> System Settings
-        </a>
         <a href="{% url 'dashboard' %}" class="sidebar-link">
             <i class="bi bi-arrow-left-circle"></i> Exit to Site
         </a>
+
+        <div style="position: absolute; bottom: 20px; width: 100%;">
+            <div class="px-3 mb-2 text-white-50 small">Logged in as: <strong class="text-white">{{ request.user.username }}</strong></div>
+            <a href="{% url 'cp_logout' %}" class="sidebar-link text-danger">
+                <i class="bi bi-box-arrow-left"></i> Logout
+            </a>
+        </div>
     </div>
 
     <div class="main-content">
