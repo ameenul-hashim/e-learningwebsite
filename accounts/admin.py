@@ -48,16 +48,18 @@ from django.utils.html import format_html
 
 @admin.register(AccessRequest)
 class AccessRequestAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'approval_badge', 'view_proof_link', 'created_at')
-    list_filter = ('is_approved', 'created_at')
+    list_display = ('name', 'email', 'phone', 'status_badge', 'view_proof_link', 'created_at')
+    list_filter = ('status', 'created_at')
     search_fields = ('name', 'email', 'phone')
     readonly_fields = ('created_at', 'view_proof_full')
 
-    def approval_badge(self, obj):
-        if obj.is_approved:
-            return format_html('<span class="badge-status badge-approved">Approved</span>')
+    def status_badge(self, obj):
+        if obj.status == 'approved':
+            return format_html('<span class="badge-status badge-verified">Approved</span>')
+        if obj.status == 'declined':
+            return format_html('<span class="badge-status badge-blocked">Declined</span>')
         return format_html('<span class="badge-status badge-pending">Waiting Approval</span>')
-    approval_badge.short_description = "Request Status"
+    status_badge.short_description = "Request Status"
 
     class Media:
         css = {
@@ -73,11 +75,11 @@ class AccessRequestAdmin(admin.ModelAdmin):
             'description': 'Review the uploaded document before approving.'
         }),
         ('Decision', {
-            'fields': ('is_approved', 'created_at'),
+            'fields': ('status', 'created_at'),
         }),
     )
     
-    actions = ['approve_requests']
+    actions = ['approve_requests', 'decline_requests']
 
     def view_proof_link(self, obj):
         if obj.proof:
@@ -92,5 +94,9 @@ class AccessRequestAdmin(admin.ModelAdmin):
     view_proof_full.short_description = "Proof Action"
 
     def approve_requests(self, request, queryset):
-        queryset.update(is_approved=True)
+        queryset.update(status='approved')
     approve_requests.short_description = "Mark selected as Approved"
+
+    def decline_requests(self, request, queryset):
+        queryset.update(status='declined')
+    decline_requests.short_description = "Mark selected as Declined"

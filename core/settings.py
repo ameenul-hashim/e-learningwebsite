@@ -63,6 +63,7 @@ MIDDLEWARE = [
     'core.middleware.production_middleware.ProductionErrorMiddleware',
     'core.middleware.production_middleware.RequestLoggingMiddleware',
     'core.middleware.production_middleware.RateLimitMiddleware',
+    'core.middleware.production_middleware.NoCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

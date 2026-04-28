@@ -22,7 +22,12 @@ class AccessRequest(models.Model):
     phone = models.CharField(max_length=20)
     whatsapp = models.CharField(max_length=20)
     proof = models.FileField(upload_to='proofs/')
-    is_approved = models.BooleanField(default=False)
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
