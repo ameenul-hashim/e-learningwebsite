@@ -5,3 +5,9 @@ python-dotenv
 dj-database-url
 psycopg2-binary
 twilio
+django-ratelimit
+django-redis
+redis
+djangorestframework
+djangorestframework-simplejwt
+psycopg[binary]

@@ -4,7 +4,7 @@ from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from .models import AccessRequest
 from .forms import AccessRequestForm, CustomLoginForm
-# from django_ratelimit.decorators import ratelimit
+from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
@@ -35,7 +35,7 @@ class RestrictedLoginView(LoginView):
     form_class = CustomLoginForm
     template_name = 'accounts/login.html'
 
-    # @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
