@@ -67,11 +67,11 @@ MIDDLEWARE = [
     'core.middleware.production_middleware.RateLimitMiddleware',
     'core.middleware.production_middleware.NoCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'core.middleware.production_middleware.BlockCheckMiddleware',
-    'core.middleware.production_middleware.LastActiveMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.production_middleware.BlockCheckMiddleware',
+    'core.middleware.production_middleware.LastActiveMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

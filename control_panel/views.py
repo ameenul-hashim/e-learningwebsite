@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.models import AccessRequest, User, AdminAuditLog
-
 from videos.models import Video, Category
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.cache import cache
 from functools import wraps
+
 
 
 
@@ -139,8 +140,20 @@ def manage_videos(request):
                 youtube_url=youtube_url,
                 category=category
             )
+            
+            # Invalidate Dashboard Cache
+            cache.clear()
+            
+            # Log admin action
+            AdminAuditLog.objects.create(
+                admin_user=request.user,
+                action="Added Video",
+                details=f"Added video: {title}"
+            )
+            
             messages.success(request, f"Video '{title}' added successfully.")
             return redirect('cp_videos')
+
 
     return render(request, 'control_panel/videos.html', {
         'videos': videos,
@@ -154,8 +167,21 @@ def delete_video(request, pk):
     Delete a video.
     """
     video = get_object_or_404(Video, pk=pk)
+    title = video.title
     video.delete()
+    
+    # Invalidate Dashboard Cache
+    cache.clear()
+    
+    # Log admin action
+    AdminAuditLog.objects.create(
+        admin_user=request.user,
+        action="Deleted Video",
+        details=f"Deleted video: {title}"
+    )
+    
     messages.warning(request, "Video removed.")
+
     return redirect('cp_videos')
 
 
@@ -274,8 +300,20 @@ def manage_categories(request):
         
         if name:
             Category.objects.create(name=name, description=description)
+            
+            # Invalidate Dashboard Cache
+            cache.clear()
+            
+            # Log admin action
+            AdminAuditLog.objects.create(
+                admin_user=request.user,
+                action="Added Subject",
+                details=f"Added subject: {name}"
+            )
+            
             messages.success(request, f"Subject '{name}' added successfully.")
             return redirect('cp_categories')
+
 
     return render(request, 'control_panel/categories.html', {'categories': categories})
 
@@ -286,7 +324,20 @@ def delete_category(request, pk):
     Delete a category/subject.
     """
     category = get_object_or_404(Category, pk=pk)
+    name = category.name
     category.delete()
+    
+    # Invalidate Dashboard Cache
+    cache.clear()
+    
+    # Log admin action
+    AdminAuditLog.objects.create(
+        admin_user=request.user,
+        action="Deleted Subject",
+        details=f"Deleted subject: {name}"
+    )
+    
     messages.warning(request, "Subject deleted.")
+
     return redirect('cp_categories')
 
