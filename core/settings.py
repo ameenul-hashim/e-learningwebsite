@@ -40,6 +40,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.middleware.production_middleware.BlockCheckMiddleware',
     'core.middleware.production_middleware.LastActiveMiddleware',
+    'core.middleware.production_middleware.ForceCredentialUpdateMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

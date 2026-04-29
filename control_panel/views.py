@@ -27,7 +27,7 @@ def send_setup_email(username, email, password, is_reset=False):
             f"Username: {username}\n"
             f"Temporary Password: {password}\n\n"
             f"Login here: {settings.LOGIN_URL}\n\n"
-            f"⚠️ You must change your password immediately after logging in.\n\n"
+            f"⚠️ You must change your username and password immediately after logging in.\n\n"
             f"Best regards,\nEduStream Team"
         )
         send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [email])

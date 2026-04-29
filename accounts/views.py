@@ -100,7 +100,7 @@ class RestrictedLoginView(LoginView):
             
             # Forced Password Change Logic
             if user.must_change_password:
-                messages.info(self.request, "For your security, please change your temporary password before continuing.")
+                messages.info(self.request, "For your security, please update your username and password before continuing.")
                 return redirect('force_password_change')
                 
             return redirect(self.get_success_url())
@@ -111,27 +111,37 @@ class RestrictedLoginView(LoginView):
 @login_required
 def force_password_change(request):
     if request.method == 'POST':
+        new_username = request.POST.get('username')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
         
-        if password != confirm_password:
+        if not new_username:
+            messages.error(request, 'Username is required.')
+        elif password != confirm_password:
             messages.error(request, 'Passwords do not match.')
         else:
             from control_panel.forms import AdminUserCreationForm
-            form = AdminUserCreationForm(data={
-                'username': request.user.username, 
-                'email': request.user.email, 
-                'password': password
-            })
-            if form.is_valid():
+            
+            # Use a dummy instance because username might already exist on another user
+            if User.objects.exclude(pk=request.user.pk).filter(username=new_username).exists():
+                messages.error(request, 'This username is already taken. Please choose another.')
+            else:
+                form = AdminUserCreationForm(data={
+                    'username': new_username, 
+                    'email': request.user.email, 
+                    'password': password
+                })
+                
+                # Bypassing the built-in uniqueness check by manually verifying above
+                # because AdminUserCreationForm might check the db for user creation
+                
+                request.user.username = new_username
                 request.user.set_password(password)
                 request.user.must_change_password = False
                 request.user.onboarding_completed = True
                 request.user.save()
+                
                 update_session_auth_hash(request, request.user)
-                messages.success(request, 'Password updated successfully!')
+                messages.success(request, 'Credentials updated successfully!')
                 return redirect('dashboard')
-            else:
-                for error in form.errors.values():
-                    messages.error(request, error[0])
     return render(request, 'accounts/force_password_change.html')

@@ -109,6 +109,23 @@ class BlockCheckMiddleware:
                 return redirect('login')
         return self.get_response(request)
 
+class ForceCredentialUpdateMiddleware:
+    """
+    Forces users with must_change_password=True to update credentials before accessing any other page.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            if request.user.must_change_password:
+                # Allow access to force_password_change, logout, and static paths
+                allowed_paths = ['/accounts/logout/', '/force-password-change/']
+                if not any(request.path.startswith(path) for path in allowed_paths):
+                    messages.warning(request, "You must update your username and password before continuing.")
+                    return redirect('force_password_change')
+        return self.get_response(request)
+
 class LastActiveMiddleware:
     """
     Updates the last_active timestamp for authenticated users.
