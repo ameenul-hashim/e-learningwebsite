@@ -1,21 +1,31 @@
 import os
 import django
-from django.db import connection
+import sys
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-def fix_db():
+from django.db import connection
+
+def force_cleanup():
+    print("--- STARTING AGGRESSIVE DATABASE CLEANUP ---")
     with connection.cursor() as cursor:
-        print("Checking for schema consistency...")
-        try:
-            cursor.execute("DELETE FROM django_migrations WHERE app IN ('accounts', 'videos', 'control_panel');")
-            cursor.execute("DROP TABLE IF EXISTS accounts_user CASCADE;")
-            cursor.execute("DROP TABLE IF EXISTS videos_video CASCADE;")
-            cursor.execute("DROP TABLE IF EXISTS videos_subject CASCADE;")
-            print("Legacy tables dropped for fresh rebuild.")
-        except Exception as e:
-            print(f"Cleanup note: {e}")
+        tables_to_drop = [
+            'accounts_user_groups',
+            'accounts_user_user_permissions',
+            'accounts_user',
+            'videos_video',
+            'videos_subject',
+            'django_migrations' # Dropping migration history entirely to force full re-run
+        ]
+        for table in tables_to_drop:
+            try:
+                print(f"Dropping table {table}...")
+                cursor.execute(f"DROP TABLE IF EXISTS {table} CASCADE;")
+            except Exception as e:
+                print(f"Failed to drop {table}: {e}")
+        
+    print("--- CLEANUP COMPLETE ---")
 
 if __name__ == "__main__":
-    fix_db()
+    force_cleanup()
