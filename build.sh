@@ -6,5 +6,5 @@ set -o errexit
 pip install -r requirements.txt
 
 # Collect static files
-# We run this during build to ensure static assets are ready
-python manage.py collectstatic --no-input
+# Ensure collectstatic succeeds or fails the entire build
+python manage.py collectstatic --no-input || { echo "Collectstatic failed"; exit 1; }

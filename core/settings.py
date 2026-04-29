@@ -31,9 +31,12 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Restrict ALLOWED_HOSTS for Render
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS_ENV = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,0.0.0.0').split(',')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV if host.strip()]
+
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 
 # Production Environment Validation
 if not DEBUG and os.getenv('RENDER'):
@@ -149,15 +152,17 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Caching Strategy (Redis Optimized)
+# Caching Strategy (Redis Optimized with Safety)
 REDIS_URL = os.getenv('REDIS_URL')
 if REDIS_URL:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": REDIS_URL,
+            "TIMEOUT": 60 * 15,  # 15 minutes
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "IGNORE_EXCEPTIONS": True,  # Prevent crash if Redis is down
             }
         }
     }
@@ -169,6 +174,7 @@ else:
             'TIMEOUT': 300,
         }
     }
+
 
 # Email Configuration (Production SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
