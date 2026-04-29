@@ -27,6 +27,8 @@ def login_view(request):
                     messages.warning(request, "Your account is under verification.")
                 else:
                     login(request, user)
+                    if user.is_staff:
+                        return redirect('admin_dashboard')
                     return redirect('dashboard')
             else:
                 messages.error(request, "Invalid username or password.")
