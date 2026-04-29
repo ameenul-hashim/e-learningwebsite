@@ -136,5 +136,49 @@
             </div>
         </div>
     </div>
+    <!-- Analytics Widgets -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
+        <!-- Top Subjects -->
+        <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-8 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="font-black text-slate-900 tracking-tight text-lg">Top <span class="text-blue-600">Subjects</span></h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Most engaged learning clusters</p>
+            </div>
+            <div class="p-8 space-y-4">
+                {% for subject in top_subjects %}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black text-[10px]">{{ forloop.counter }}</div>
+                        <span class="text-sm font-bold text-slate-700">{{ subject.name }}</span>
+                    </div>
+                    <div class="text-xs font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-lg">{{ subject.watch_count }} Views</div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-slate-400 text-xs font-bold uppercase tracking-widest">No data available.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Videos -->
+        <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-8 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="font-black text-slate-900 tracking-tight text-lg">Top <span class="text-purple-600">Videos</span></h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Highest engagement individual lessons</p>
+            </div>
+            <div class="p-8 space-y-4">
+                {% for video in top_videos %}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 font-black text-[10px]">{{ forloop.counter }}</div>
+                        <span class="text-sm font-bold text-slate-700 truncate max-w-[200px]">{{ video.title }}</span>
+                    </div>
+                    <div class="text-xs font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-lg">{{ video.watch_count }} Views</div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-slate-400 text-xs font-bold uppercase tracking-widest">No data available.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

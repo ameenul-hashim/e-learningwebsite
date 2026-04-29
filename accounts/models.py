@@ -8,6 +8,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, db_index=True)
     is_verified = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
+    must_change_password = models.BooleanField(default=True)
     last_active = models.DateTimeField(null=True, blank=True)
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True)
     access_expires = models.DateField(null=True, blank=True, help_text="User access will be revoked after this date.")
@@ -40,8 +41,8 @@ class AdminAuditLog(models.Model):
     Tracks administrative actions for accountability.
     """
     admin_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
-    action = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    action = models.CharField(max_length=255, db_index=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     details = models.TextField(blank=True, null=True)
 
     class Meta:

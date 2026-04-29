@@ -101,37 +101,80 @@ def cp_admin_required(view_func):
 @cp_admin_required
 def dashboard(request):
     """
-    Main admin dashboard overview with audit logs.
+    Main admin dashboard overview with advanced analytics.
     """
+    from django.db.models import Count
+    from django.utils import timezone
+    from datetime import timedelta
+    from videos.models import VideoWatchLog
+
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    
     stats = {
         'total_users': User.objects.count(),
         'pending_requests': AccessRequest.objects.filter(status='pending').count(),
         'total_videos': Video.objects.count(),
         'total_categories': Category.objects.count(),
+        'active_users': User.objects.filter(last_active__gte=thirty_days_ago).count(),
     }
+    
+    # Analytics
+    top_subjects = Category.objects.annotate(
+        watch_count=Count('videos__videowatchlog')
+    ).order_by('-watch_count')[:5]
+    
+    top_videos = Video.objects.annotate(
+        watch_count=Count('videowatchlog')
+    ).order_by('-watch_count')[:5]
+
     recent_logs = AdminAuditLog.objects.select_related('admin_user').all()[:10]
+    
     return render(request, 'control_panel/dashboard.html', {
         'stats': stats,
-        'recent_logs': recent_logs
+        'recent_logs': recent_logs,
+        'top_subjects': top_subjects,
+        'top_videos': top_videos,
     })
 
 
 @cp_admin_required
 def manage_requests(request):
     """
-    Handle user access requests with pagination.
+    Handle user access requests with search, filter, and pagination.
     """
     from django.core.paginator import Paginator
-    pending_list = AccessRequest.objects.filter(status='pending').order_by('-created_at')
+    from django.db.models import Q
     
-    paginator = Paginator(pending_list, 10) # 10 per page
+    pending_list = AccessRequest.objects.filter(status='pending')
+    
+    # Search
+    search_query = request.GET.get('q')
+    if search_query:
+        pending_list = pending_list.filter(
+            Q(name__icontains=search_query) | 
+            Q(email__icontains=search_query) |
+            Q(whatsapp__icontains=search_query)
+        )
+    
+    pending_list = pending_list.order_by('-created_at')
+    
+    paginator = Paginator(pending_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    history = AccessRequest.objects.exclude(status='pending').order_by('-created_at')[:20]
+    # History with status filter
+    status_filter = request.GET.get('status')
+    history = AccessRequest.objects.exclude(status='pending')
+    if status_filter in ['approved', 'rejected']:
+        history = history.filter(status=status_filter)
+    
+    history = history.order_by('-created_at')[:20]
+    
     return render(request, 'control_panel/requests.html', {
         'pending': page_obj,
-        'history': history
+        'history': history,
+        'search_query': search_query,
+        'status_filter': status_filter
     })
 
 
@@ -407,12 +450,24 @@ def delete_video(request, pk):
 @cp_admin_required
 def manage_users(request):
     """
-    Manage users (list, create, edit) with pagination.
+    Manage users (list, create, edit) with search and pagination.
     """
     from django.core.paginator import Paginator
+    from django.db.models import Q
     
-    user_list = User.objects.all().order_by('-date_joined')
-    paginator = Paginator(user_list, 15) # 15 per page
+    user_list = User.objects.all()
+    
+    # Search
+    search_query = request.GET.get('q')
+    if search_query:
+        user_list = user_list.filter(
+            Q(username__icontains=search_query) | 
+            Q(email__icontains=search_query) |
+            Q(whatsapp_number__icontains=search_query)
+        )
+    
+    user_list = user_list.order_by('-date_joined')
+    paginator = Paginator(user_list, 15)
     
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
