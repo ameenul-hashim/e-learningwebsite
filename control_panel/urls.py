@@ -1,7 +1,10 @@
 from django.urls import path
 from . import views
 
+from accounts.views import login_view
+
 urlpatterns = [
+    path('login/', login_view, name='admin_login_direct'),
     path('', views.admin_dashboard, name='admin_dashboard'),
     path('pending/', views.pending_requests, name='pending_requests'),
     path('approve/<int:uid>/', views.approve_user, name='approve_user'),
