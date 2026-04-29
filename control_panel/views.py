@@ -36,7 +36,7 @@ def send_whatsapp_notification(to_number, message_body):
             os.getenv('TWILIO_AUTH_TOKEN')
         )
         
-        message = client.messages.create(
+        client.messages.create(
             from_=os.getenv('TWILIO_WHATSAPP_NUMBER'),
             body=message_body,
             to=formatted_to
@@ -45,6 +45,43 @@ def send_whatsapp_notification(to_number, message_body):
     except Exception as e:
         print(f"Twilio Send Error: {str(e)}")
         return False
+
+def send_credential_notification(user_name, email, whatsapp, username, password, is_reset=False):
+    """
+    Primary WhatsApp delivery with Email Fallback.
+    """
+    login_url = settings.LOGIN_URL # or build absolute
+    action_text = "application is approved" if not is_reset else "credentials have been reset"
+    pass_label = "Password" if not is_reset else "New Password"
+    
+    message_body = (
+        f"EduStream: Your {action_text}.\n"
+        f"Username: {username}\n"
+        f"{pass_label}: {password}\n"
+        f"Do not share this information."
+    )
+    
+    # Try WhatsApp
+    whatsapp_success = send_whatsapp_notification(whatsapp, message_body)
+    
+    # Try Email anyway or as fallback
+    email_success = False
+    try:
+        subject = f"EduStream: {'Account Ready' if not is_reset else 'Password Reset'}"
+        email_message = (
+            f"Hello {user_name},\n\n"
+            f"Your {action_text}.\n\n"
+            f"Username: {username}\n"
+            f"{pass_label}: {password}\n\n"
+            f"Keep these credentials secure.\n\n"
+            f"Best regards,\nEduStream Team"
+        )
+        send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [email])
+        email_success = True
+    except Exception as e:
+        print(f"Email Error: {str(e)}")
+        
+    return whatsapp_success, email_success
 
 
 
@@ -144,10 +181,36 @@ def decline_request(request, pk):
             "Your submitted proof is not sufficient. Please upload a valid document."
         )
         
-        if send_whatsapp_notification(access_req.whatsapp, message_body):
+        ws_ok = send_whatsapp_notification(access_req.whatsapp, message_body)
+        
+        # Email fallback for rejection
+        em_ok = False
+        if not ws_ok:
+            try:
+                subject = "EduStream: Access Request Update"
+                email_message = (
+                    f"Hello {access_req.name},\n\n"
+                    "We regret to inform you that your verification proof was not sufficient for access.\n"
+                    "Please log in to the landing page and submit a valid student ID or document.\n\n"
+                    "Best regards,\nEduStream Team"
+                )
+                send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
+                em_ok = True
+            except Exception as e:
+                print(f"Email Rejection Error: {str(e)}")
+
+        AdminAuditLog.objects.create(
+            admin_user=request.user,
+            action="Request Declined",
+            details=f"Declined {access_req.email}. Notification status: WS={ws_ok}, EM={em_ok}"
+        )
+        
+        if ws_ok:
             messages.info(request, f"Request from {access_req.name} declined and WhatsApp sent.")
+        elif em_ok:
+            messages.warning(request, f"WhatsApp failed, but rejection Email sent to {access_req.email}.")
         else:
-            messages.warning(request, f"Request declined, but WhatsApp notification failed.")
+            messages.error(request, "Request declined, but both notification methods failed.")
             
     except Exception as e:
         messages.error(request, f"Error processing decline: {str(e)}")
@@ -188,25 +251,23 @@ def create_user_from_request(request, request_id):
                     whatsapp_number=normalize_phone(access_req.whatsapp)
                 )
                 
-                # Send WhatsApp credentials message
-                login_url = request.build_absolute_uri("/login/")
-                message_body = (
-                    f"EduStream: Your application is approved.\n"
-                    f"Username: {username}\n"
-                    f"Password: {password}\n"
-                    f"Use these credentials to login: {login_url}\n"
-                    f"Do not share this information."
+                # Send Credentials with Fallback
+                ws_ok, em_ok = send_credential_notification(
+                    access_req.name, access_req.email, access_req.whatsapp, 
+                    username, password
                 )
                 
-                if send_whatsapp_notification(access_req.whatsapp, message_body):
-                    messages.success(request, f"Account for {username} created and WhatsApp sent.")
+                if ws_ok:
+                    messages.success(request, f"Account created and WhatsApp sent to {access_req.whatsapp}.")
+                elif em_ok:
+                    messages.warning(request, f"Account created. WhatsApp failed, but fallback Email sent to {access_req.email}.")
                 else:
-                    messages.warning(request, f"Account created, but WhatsApp failed to send.")
+                    messages.error(request, "Account created, but both WhatsApp and Email notifications failed.")
 
                 AdminAuditLog.objects.create(
                     admin_user=request.user,
-                    action="Completed User Creation",
-                    details=f"Created user {username} for approved request {email}"
+                    action="User Onboarded",
+                    details=f"Finalized account for {access_req.email}. Username: {username}. Notification status: WS={ws_ok}, EM={em_ok}"
                 )
                 return redirect('cp_dashboard')
                 
@@ -243,24 +304,23 @@ def resend_credentials(request, pk):
         user.set_password(new_password)
         user.save()
         
-        login_url = request.build_absolute_uri("/login/")
-        message_body = (
-            f"EduStream: Your credentials have been reset.\n"
-            f"Username: {user.username}\n"
-            f"New Password: {new_password}\n"
-            f"Login here: {login_url}\n"
-            f"Keep this secure."
+        ws_ok, em_ok = send_credential_notification(
+            user.username, user.email, user.whatsapp_number, 
+            user.username, new_password, is_reset=True
         )
         
-        if send_whatsapp_notification(user.whatsapp_number, message_body):
-            AdminAuditLog.objects.create(
-                admin_user=request.user,
-                action="Resent Credentials",
-                details=f"Reset and resent credentials to {user.username}"
-            )
+        if ws_ok:
             messages.success(request, f"New credentials sent to {user.username} via WhatsApp.")
+        elif em_ok:
+            messages.warning(request, f"WhatsApp failed, but new credentials sent via Email fallback.")
         else:
-            messages.error(request, "Failed to send WhatsApp message. Please check Twilio logs.")
+            messages.error(request, "Failed to send new credentials via both WhatsApp and Email.")
+
+        AdminAuditLog.objects.create(
+            admin_user=request.user,
+            action="Credentials Reset",
+            details=f"Reset and resent credentials for {user.username}. Notification status: WS={ws_ok}, EM={em_ok}"
+        )
             
     except Exception as e:
         messages.error(request, f"Error resetting credentials: {str(e)}")
