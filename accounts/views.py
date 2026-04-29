@@ -4,6 +4,9 @@ from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from .models import AccessRequest
 from .forms import AccessRequestForm, CustomLoginForm
+from ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
+
 
 def landing_page(request):
     """
@@ -30,6 +33,11 @@ class RestrictedLoginView(LoginView):
     """
     form_class = CustomLoginForm
     template_name = 'accounts/login.html'
+
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
 
     def form_valid(self, form):
         user = form.get_user()

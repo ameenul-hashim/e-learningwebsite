@@ -3,6 +3,11 @@ import time
 from django.http import JsonResponse, HttpResponseServerError
 from django.core.cache import cache
 from django.conf import settings
+from django.utils import timezone
+from django.contrib.auth import logout
+from django.contrib import messages
+from django.shortcuts import redirect
+
 
 logger = logging.getLogger('production.middleware')
 
@@ -89,3 +94,35 @@ class NoCacheMiddleware:
             response["Pragma"] = "no-cache"
             response["Expires"] = "0"
         return response
+class BlockCheckMiddleware:
+    """
+    Checks if an authenticated user is blocked and logs them out if so.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            if request.user.is_blocked:
+                logout(request)
+                messages.error(request, "You are blocked, please contact admin.")
+                return redirect('login')
+        return self.get_response(request)
+
+class LastActiveMiddleware:
+    """
+    Updates the last_active timestamp for authenticated users.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            # Update last_active at most once every 5 minutes to save DB writes
+            now = timezone.now()
+            last_active = request.user.last_active
+            if not last_active or (now - last_active).total_seconds() > 300:
+                request.user.last_active = now
+                request.user.save(update_fields=['last_active'])
+        return self.get_response(request)
+

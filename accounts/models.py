@@ -8,6 +8,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, db_index=True)
     is_verified = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
+    last_active = models.DateTimeField(null=True, blank=True)
     access_expires = models.DateField(null=True, blank=True, help_text="User access will be revoked after this date.")
 
     def __str__(self):
@@ -32,3 +33,19 @@ class AccessRequest(models.Model):
 
     def __str__(self):
         return f"Request from {self.name} ({self.email})"
+
+class AdminAuditLog(models.Model):
+    """
+    Tracks administrative actions for accountability.
+    """
+    admin_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.admin_user} - {self.action} - {self.timestamp}"
+

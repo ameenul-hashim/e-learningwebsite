@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from accounts.models import AccessRequest, User
+from accounts.models import AccessRequest, User, AdminAuditLog
+
 from videos.models import Video, Category
 from django.core.mail import send_mail
 from django.conf import settings
@@ -63,7 +64,15 @@ def approve_request(request, pk):
     access_req.status = 'approved'
     access_req.save()
 
+    # Log admin action
+    AdminAuditLog.objects.create(
+        admin_user=request.user,
+        action="Approved Request",
+        details=f"Approved request from {access_req.email}"
+    )
+
     # Step 1 Email: Approval Notification
+
     subject = 'EduStream Access Request: Approved'
     message = f'Hello {access_req.name},\n\nGood news! Your verification proof has been accepted and your access request to EduStream has been approved.\n\nOur administrator will now set up your account. You will receive a second email shortly with your login credentials.\n\nBest regards,\nEduStream Team'
     recipient_list = [access_req.email]
@@ -89,7 +98,15 @@ def decline_request(request, pk):
     access_req.status = 'declined'
     access_req.save()
     
+    # Log admin action
+    AdminAuditLog.objects.create(
+        admin_user=request.user,
+        action="Declined Request",
+        details=f"Declined request from {access_req.email}"
+    )
+    
     # Send rejection email
+
     subject = 'EduStream Access Request Update'
     message = f'Hello {access_req.name},\n\nWe regret to inform you that your access request to EduStream has been declined at this time.\n\nBest regards,\nEduStream Team'
     recipient_list = [access_req.email]
@@ -173,7 +190,16 @@ def manage_users(request):
                     message = f'Hello,\n\nYour EduStream account is ready.\n\nUsername: {username}\nPassword: {password}\n\nYou can log in here: {login_url}\n\nPlease keep these credentials secure.\n\nBest regards,\nEduStream Team'
                     
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+                    
+                    # Log admin action
+                    AdminAuditLog.objects.create(
+                        admin_user=request.user,
+                        action="Created User",
+                        details=f"Manually created user: {username} ({email})"
+                    )
+                    
                     messages.success(request, f"User '{username}' created and credentials sent to {email}.")
+
                     return redirect('cp_users')
                 except Exception as e:
                     messages.error(request, f"Error creating user or sending email: {str(e)}")
@@ -194,8 +220,18 @@ def delete_user(request, pk):
     if user.is_superuser:
         messages.error(request, "Cannot delete superuser.")
     else:
+        username = user.username
         user.delete()
+        
+        # Log admin action
+        AdminAuditLog.objects.create(
+            admin_user=request.user,
+            action="Deleted User",
+            details=f"Deleted user account: {username}"
+        )
+        
         messages.warning(request, "User deleted.")
+
     return redirect('cp_users')
 
 
@@ -212,7 +248,16 @@ def toggle_user_status(request, pk):
         user.is_active = not user.is_blocked
         user.save()
         status = "blocked" if user.is_blocked else "activated"
+        
+        # Log admin action
+        AdminAuditLog.objects.create(
+            admin_user=request.user,
+            action=f"{status.capitalize()} User",
+            details=f"Changed status for {user.username} to {status}"
+        )
+        
         messages.success(request, f"User {user.username} has been {status}.")
+
     return redirect('cp_users')
 
 
