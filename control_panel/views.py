@@ -5,8 +5,37 @@ from accounts.models import User
 from videos.models import Subject, Video
 from django.db.models import Count
 
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.forms import AuthenticationForm
+
 def admin_required(view_func):
-    return user_passes_test(lambda u: u.is_authenticated and u.is_staff)(view_func)
+    return user_passes_test(lambda u: u.is_authenticated and u.is_staff, login_url='admin_login')(view_func)
+
+def admin_login(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('admin_dashboard')
+    
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user.is_staff:
+                auth_login(request, user)
+                return redirect('admin_dashboard')
+            else:
+                messages.error(request, "Access denied. Not an administrator.")
+        else:
+            messages.error(request, "Invalid administrator credentials.")
+    else:
+        form = AuthenticationForm()
+    
+    return render(request, 'control_panel/login.html', {'form': form})
+
+@admin_required
+def admin_logout(request):
+    auth_logout(request)
+    messages.info(request, "Logged out from Admin Panel.")
+    return redirect('admin_login')
 
 @admin_required
 def admin_dashboard(request):

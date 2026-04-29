@@ -21,10 +21,12 @@
                     {% if user.is_authenticated %}
                         <span class="text-gray-600 text-sm">Hello, {{ user.username }}</span>
                         {% if user.is_staff %}
-                            <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Admin Panel</a>
+                            <a href="{% url 'admin_dashboard' %}" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-black transition">Admin Panel</a>
+                            <a href="{% url 'admin_logout' %}" class="text-gray-600 hover:text-red-600 px-3 py-2 text-sm font-medium">Logout</a>
+                        {% else %}
+                            <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Dashboard</a>
+                            <a href="{% url 'logout' %}" class="text-red-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Logout</a>
                         {% endif %}
-                        <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Dashboard</a>
-                        <a href="{% url 'logout' %}" class="text-red-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Logout</a>
                     {% else %}
                         <a href="{% url 'login' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Login</a>
                         <a href="{% url 'signup' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Sign Up</a>
