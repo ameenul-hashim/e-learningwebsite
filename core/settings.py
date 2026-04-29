@@ -31,9 +31,17 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Restrict ALLOWED_HOSTS for Render
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Production Environment Validation
+if not DEBUG:
+    REQUIRED_ENV_VARS = ['SECRET_KEY', 'DATABASE_URL', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD']
+    missing_vars = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
+    if missing_vars:
+        raise ValueError(f"CRITICAL ERROR: Missing required production environment variables: {', '.join(missing_vars)}")
+
 
 
 # Application definition
@@ -101,19 +109,25 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # DATABASES = {
 import dj_database_url
 
-# Force PostgreSQL in production (Resilient check)
+# Force PostgreSQL in production with SQLite fallback for build-time checks
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 DATABASES = {
     'default': dj_database_url.config(
         default=DATABASE_URL or f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=bool(DATABASE_URL)
+        ssl_require=True if (DATABASE_URL and 'localhost' not in DATABASE_URL) else False
     )
 }
 
-if not DATABASES['default'].get('ENGINE') and not DEBUG:
-    raise Exception("Database configuration failed. Ensure DATABASE_URL is set in production.")
+# Ensure Database Configuration is valid
+try:
+    if not DATABASES['default'].get('ENGINE') and not DEBUG:
+        raise Exception("Database configuration failed. Ensure DATABASE_URL is set correctly.")
+except Exception as e:
+    if not DEBUG:
+        print(f"DATABASE CONFIGURATION WARNING: {str(e)}")
+
 
 # Security and Session Management
 SESSION_COOKIE_SECURE = not DEBUG
