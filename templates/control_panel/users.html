@@ -61,6 +61,11 @@
                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                                 Blocked
                             </span>
+                            {% elif not user.onboarding_completed %}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                Onboarding
+                            </span>
                             {% elif user.is_active %}
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-widest border border-green-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
@@ -75,9 +80,11 @@
                         <td class="p-6 text-right">
                             <div class="flex justify-end gap-2">
                                 {% if not user.is_superuser %}
-                                <a href="{% url 'cp_resend_credentials' user.pk %}" onclick="return confirm('Reset and resend credentials to {{ user.username }}?');" class="p-2 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-all" title="Resend & Reset Credentials">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                                </a>
+                                    {% if not user.onboarding_completed %}
+                                    <a href="{% url 'cp_resend_link' user.pk %}" onclick="return confirm('Resend secure setup link to {{ user.username }}?');" class="p-2 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-all" title="Resend Setup Link">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                    </a>
+                                    {% endif %}
                                 <a href="{% url 'cp_toggle_user' user.pk %}" class="p-2 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-all" title="{% if user.is_blocked %}Unblock{% else %}Block{% endif %}">
                                     {% if user.is_blocked %}
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>

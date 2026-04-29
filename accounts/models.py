@@ -9,6 +9,7 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
     must_change_password = models.BooleanField(default=True)
+    onboarding_completed = models.BooleanField(default=False)
     last_active = models.DateTimeField(null=True, blank=True)
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True)
     access_expires = models.DateField(null=True, blank=True, help_text="User access will be revoked after this date.")

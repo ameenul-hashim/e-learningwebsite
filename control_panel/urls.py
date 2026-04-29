@@ -17,7 +17,7 @@ urlpatterns = [
     path('control-panel/users/', views.manage_users, name='cp_users'),
     path('control-panel/users/delete/<int:pk>/', views.delete_user, name='cp_delete_user'),
     path('control-panel/users/toggle/<int:pk>/', views.toggle_user_status, name='cp_toggle_user'),
-    path('control-panel/users/resend/<int:pk>/', views.resend_credentials, name='cp_resend_credentials'),
+    path('control-panel/users/resend-link/<int:pk>/', views.resend_setup_link, name='cp_resend_link'),
 
     # Category/Subject Management
     path('control-panel/categories/', views.manage_categories, name='cp_categories'),

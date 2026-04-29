@@ -23,6 +23,11 @@ def password_setup_view(request, uidb64, token):
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
+    # Block if onboarding already completed
+    if user and user.onboarding_completed:
+        messages.info(request, "Your account setup is already complete. Please log in.")
+        return redirect('login')
+
     if user is not None and default_token_generator.check_token(user, token):
         if request.method == 'POST':
             password = request.POST.get('password')
@@ -31,11 +36,6 @@ def password_setup_view(request, uidb64, token):
             if password != confirm_password:
                 messages.error(request, "Passwords do not match.")
             else:
-                from control_panel.forms import AdminUserCreationForm
-                # Use a dummy form just for validation if needed, or manual validation
-                # For simplicity and consistency with previous requirements:
-                from control_panel.forms import AdminUserCreationForm
-                # Actually I'll just do manual validation here to avoid form complexities
                 import re
                 if len(password) < 8:
                     messages.error(request, "Password must be at least 8 characters.")
@@ -44,14 +44,17 @@ def password_setup_view(request, uidb64, token):
                 else:
                     user.set_password(password)
                     user.must_change_password = False
+                    user.onboarding_completed = True
                     user.save()
-                    messages.success(request, "Password set successfully! You can now log in.")
-                    return redirect('login')
+                    
+                    # Auto-login after successful setup
+                    auth_login(request, user)
+                    messages.success(request, "Password set successfully! Welcome to your dashboard.")
+                    return redirect('dashboard')
         
-        return render(request, 'accounts/password_setup.html', {'user': user})
+        return render(request, 'accounts/password_setup.html', {'user': user, 'valid': True})
     else:
-        messages.error(request, "The password setup link is invalid or has expired.")
-        return redirect('landing')
+        return render(request, 'accounts/password_setup.html', {'valid': False})
 
 def landing_page(request):
     """

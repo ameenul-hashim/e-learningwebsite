@@ -351,44 +351,46 @@ def create_user_from_request(request, request_id):
 
 
 @cp_admin_required
-def resend_credentials(request, pk):
+def resend_setup_link(request, pk):
     """
-    Reset password and resend credentials via WhatsApp.
+    Generate and resend a secure password setup link.
     """
-    from django.utils.crypto import get_random_string
     user = get_object_or_404(User, pk=pk)
     
+    if user.onboarding_completed:
+        messages.info(request, f"User {user.username} has already completed onboarding.")
+        return redirect('cp_users')
+
     if not user.whatsapp_number:
         messages.error(request, f"User {user.username} does not have a WhatsApp number on file.")
         return redirect('cp_users')
 
     try:
-        # Generate new password
-        new_password = get_random_string(12)
-        user.set_password(new_password)
-        user.save()
+        # Generate fresh token
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        setup_link = f"{request.build_absolute_uri('/')[:-1]}/accounts/setup-password/{uid}/{token}/"
         
+        # Send Link with Fallback
         ws_ok, em_ok = send_credential_notification(
             user.username, user.email, user.whatsapp_number, 
-            user.username, new_password, is_reset=True
+            user.username, setup_link, is_reset=True
         )
         
-        if ws_ok:
-            messages.success(request, f"New credentials sent to {user.username} via WhatsApp.")
-        elif em_ok:
-            messages.warning(request, f"WhatsApp failed, but new credentials sent via Email fallback.")
+        if ws_ok or em_ok:
+            messages.success(request, f"Fresh setup link sent to {user.username} via {'WhatsApp' if ws_ok else 'Email'}.")
         else:
-            messages.error(request, "Failed to send new credentials via both WhatsApp and Email.")
+            messages.error(request, "Failed to send setup link via both channels.")
 
         AdminAuditLog.objects.create(
             admin_user=request.user,
-            action="Credentials Reset",
-            details=f"Reset and resent credentials for {user.username}. Notification status: WS={ws_ok}, EM={em_ok}"
+            action="Resent Setup Link",
+            details=f"Generated new setup token for {user.email}."
         )
-            
+        
     except Exception as e:
-        messages.error(request, f"Error resetting credentials: {str(e)}")
-
+        messages.error(request, f"Error resending link: {str(e)}")
+        
     return redirect('cp_users')
 
 
