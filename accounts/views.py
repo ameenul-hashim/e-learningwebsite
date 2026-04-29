@@ -13,48 +13,48 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from .models import User
 
-def password_setup_view(request, uidb64, token):
-    """
-    View for students to set their password for the first time using a secure link.
-    """
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    # Block if onboarding already completed
-    if user and user.onboarding_completed:
-        messages.info(request, "Your account setup is already complete. Please log in.")
-        return redirect('login')
-
-    if user is not None and default_token_generator.check_token(user, token):
-        if request.method == 'POST':
-            password = request.POST.get('password')
-            confirm_password = request.POST.get('confirm_password')
-
-            if password != confirm_password:
-                messages.error(request, "Passwords do not match.")
-            else:
-                import re
-                if len(password) < 8:
-                    messages.error(request, "Password must be at least 8 characters.")
-                elif not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password):
-                    messages.error(request, "Password must include uppercase and numbers.")
-                else:
-                    user.set_password(password)
-                    user.must_change_password = False
-                    user.onboarding_completed = True
-                    user.save()
-                    
-                    # Auto-login after successful setup
-                    auth_login(request, user)
-                    messages.success(request, "Password set successfully! Welcome to your dashboard.")
-                    return redirect('dashboard')
-        
-        return render(request, 'accounts/password_setup.html', {'user': user, 'valid': True})
-    else:
-        return render(request, 'accounts/password_setup.html', {'valid': False})
+# def password_setup_view(request, uidb64, token):
+#     """
+#     View for students to set their password for the first time using a secure link.
+#     """
+#     try:
+#         uid = force_str(urlsafe_base64_decode(uidb64))
+#         user = User.objects.get(pk=uid)
+#     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+#         user = None
+# 
+#     # Block if onboarding already completed
+#     if user and user.onboarding_completed:
+#         messages.info(request, "Your account setup is already complete. Please log in.")
+#         return redirect('login')
+# 
+#     if user is not None and default_token_generator.check_token(user, token):
+#         if request.method == 'POST':
+#             password = request.POST.get('password')
+#             confirm_password = request.POST.get('confirm_password')
+# 
+#             if password != confirm_password:
+#                 messages.error(request, "Passwords do not match.")
+#             else:
+#                 import re
+#                 if len(password) < 8:
+#                     messages.error(request, "Password must be at least 8 characters.")
+#                 elif not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password):
+#                     messages.error(request, "Password must include uppercase and numbers.")
+#                 else:
+#                     user.set_password(password)
+#                     user.must_change_password = False
+#                     user.onboarding_completed = True
+#                     user.save()
+#                     
+#                     # Auto-login after successful setup
+#                     auth_login(request, user)
+#                     messages.success(request, "Password set successfully! Welcome to your dashboard.")
+#                     return redirect('dashboard')
+#         
+#         return render(request, 'accounts/password_setup.html', {'user': user, 'valid': True})
+#     else:
+#         return render(request, 'accounts/password_setup.html', {'valid': False})
 
 def landing_page(request):
     """
@@ -126,6 +126,7 @@ def force_password_change(request):
             if form.is_valid():
                 request.user.set_password(password)
                 request.user.must_change_password = False
+                request.user.onboarding_completed = True
                 request.user.save()
                 update_session_auth_hash(request, request.user)
                 messages.success(request, 'Password updated successfully!')

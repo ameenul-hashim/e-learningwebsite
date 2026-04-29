@@ -13,78 +13,49 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 
-def normalize_phone(phone):
+def send_setup_email(username, email, password, is_reset=False):
     """
-    Ensure phone number has '+' and country code. Defaults to +91 if missing.
-    """
-    clean_phone = "".join(filter(str.isdigit, str(phone)))
-    if not clean_phone.startswith('91') and len(clean_phone) == 10:
-        clean_phone = f"91{clean_phone}"
-    if not clean_phone.startswith('+'):
-        clean_phone = f"+{clean_phone}"
-    return clean_phone
-
-def send_whatsapp_notification(to_number, message_body):
-    """
-    Helper to send WhatsApp messages via Twilio with validation.
-    """
-    return False
-    # try:
-    #     normalized_to = normalize_phone(to_number)
-    #     
-    #     # Twilio sandbox requires the number to be prefixed with 'whatsapp:'
-    #     formatted_to = f"whatsapp:{normalized_to}"
-    #         
-    #     client = Client(
-    #         os.getenv('TWILIO_ACCOUNT_SID'), 
-    #         os.getenv('TWILIO_AUTH_TOKEN')
-    #     )
-    #     
-    #     client.messages.create(
-    #         from_=os.getenv('TWILIO_WHATSAPP_NUMBER'),
-    #         body=message_body,
-    #         to=formatted_to
-    #     )
-    #     return True
-    # except Exception as e:
-    #     print(f"Twilio Send Error: {str(e)}")
-    #     return False
-
-def send_credential_notification(user_name, email, whatsapp, username, setup_link, is_reset=False):
-    """
-    Sends a secure password setup link via WhatsApp with Email Fallback.
+    Sends temporary credentials via Email.
     """
     action_text = "account is approved" if not is_reset else "password reset request has been processed"
     
-    message_body = (
-        f"EduStream: Your {action_text}.\n"
-        f"Username: {username}\n"
-        f"Set your password here: {setup_link}\n"
-        f"This link expires soon."
-    )
-    
-    # Try WhatsApp
-    whatsapp_success = send_whatsapp_notification(whatsapp, message_body)
-    
-    # Try Email anyway or as fallback
-    email_success = False
     try:
-        subject = f"EduStream: {'Set Your Password' if not is_reset else 'Reset Your Password'}"
+        subject = f"EduStream: {'Login Credentials' if not is_reset else 'Reset Credentials'}"
         email_message = (
-            f"Hello {user_name},\n\n"
-            f"Your {action_text}.\n\n"
-            f"Username: {username}\n\n"
-            f"Please click the link below to set your secure password:\n"
-            f"{setup_link}\n\n"
-            f"This link is valid for a limited time.\n\n"
+            f"Hello,\n\n"
+            f"Your {action_text} 🎉\n\n"
+            f"Username: {username}\n"
+            f"Temporary Password: {password}\n\n"
+            f"Login here: {settings.LOGIN_URL}\n\n"
+            f"⚠️ You must change your password immediately after logging in.\n\n"
             f"Best regards,\nEduStream Team"
         )
         send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [email])
-        email_success = True
+        return True
     except Exception as e:
         print(f"Email Error: {str(e)}")
-        
-    return whatsapp_success, email_success
+        return False
+
+def send_rejection_email(email):
+    """
+    Sends rejection email.
+    """
+    try:
+        send_mail(
+            "EduStream Access Request",
+            "Dear Student,\n\n"
+            "Your access request was declined.\n"
+            "Reason: Submitted proof is not sufficient.\n\n"
+            "Please submit valid documents again.\n\n"
+            "Regards,\nEduStream Team",
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Email Rejection Error: {str(e)}")
+        return False
 
 
 
@@ -213,7 +184,7 @@ def approve_request(request, pk):
 @cp_admin_required
 def decline_request(request, pk):
     """
-    Decline an access request safely with custom message.
+    Decline an access request safely via email.
     """
     access_req = get_object_or_404(AccessRequest, pk=pk)
     
@@ -231,42 +202,18 @@ def decline_request(request, pk):
             details=f"Declined request from {access_req.email}"
         )
         
-        # Send WhatsApp rejection message
-        message_body = (
-            f"Dear {access_req.name}, your access to EduStream is declined. "
-            "Your submitted proof is not sufficient. Please upload a valid document."
-        )
-        
-        ws_ok = send_whatsapp_notification(access_req.whatsapp, message_body)
-        
-        # Email fallback for rejection
-        em_ok = False
-        if not ws_ok:
-            try:
-                subject = "EduStream: Access Request Update"
-                email_message = (
-                    f"Hello {access_req.name},\n\n"
-                    "We regret to inform you that your verification proof was not sufficient for access.\n"
-                    "Please log in to the landing page and submit a valid student ID or document.\n\n"
-                    "Best regards,\nEduStream Team"
-                )
-                send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
-                em_ok = True
-            except Exception as e:
-                print(f"Email Rejection Error: {str(e)}")
+        em_ok = send_rejection_email(access_req.email)
 
         AdminAuditLog.objects.create(
             admin_user=request.user,
             action="Request Declined",
-            details=f"Declined {access_req.email}. Notification status: WS={ws_ok}, EM={em_ok}"
+            details=f"Declined {access_req.email}. Notification status: EM={em_ok}"
         )
         
-        if ws_ok:
-            messages.info(request, f"Request from {access_req.name} declined and WhatsApp sent.")
-        elif em_ok:
-            messages.warning(request, f"WhatsApp failed, but rejection Email sent to {access_req.email}.")
+        if em_ok:
+            messages.info(request, f"Request from {access_req.name} declined and Email sent.")
         else:
-            messages.error(request, "Request declined, but both notification methods failed.")
+            messages.error(request, "Request declined, but email notification failed.")
             
     except Exception as e:
         messages.error(request, f"Error processing decline: {str(e)}")
@@ -297,9 +244,11 @@ def create_user_from_request(request, request_id):
                     messages.error(request, f"User with email {email} already exists.")
                     return render(request, 'control_panel/create_user_from_request.html', {'form': form, 'req': access_req})
 
-                # Create user with random password (never sent)
-                from django.utils.crypto import get_random_string
-                temp_pass = get_random_string(32)
+                # Create user with random password
+                import random
+                import string
+                chars = string.ascii_letters + string.digits + "!@#$%"
+                temp_pass = ''.join(random.choice(chars) for _ in range(10))
                 
                 user = User.objects.create_user(
                     username=username,
@@ -310,30 +259,21 @@ def create_user_from_request(request, request_id):
                     whatsapp_number=normalize_phone(access_req.whatsapp)
                 )
                 user.must_change_password = True
+                user.onboarding_completed = False
                 user.save()
                 
-                # Generate Password Setup Link
-                token = default_token_generator.make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-                setup_link = f"{request.build_absolute_uri('/')[:-1]}/accounts/setup-password/{uid}/{token}/"
+                # Send Email
+                em_ok = send_setup_email(username, email, temp_pass)
                 
-                # Send Link with Fallback
-                ws_ok, em_ok = send_credential_notification(
-                    access_req.name, access_req.email, access_req.whatsapp, 
-                    username, setup_link
-                )
-                
-                if ws_ok:
-                    messages.success(request, f"Account created and Setup Link sent to WhatsApp.")
-                elif em_ok:
-                    messages.warning(request, f"Account created. WhatsApp failed, but Setup Link sent via Email.")
+                if em_ok:
+                    messages.success(request, f"Account created and Login Credentials sent via Email.")
                 else:
-                    messages.error(request, "Account created, but both WhatsApp and Email notifications failed.")
+                    messages.error(request, "Account created, but Email notification failed.")
 
                 AdminAuditLog.objects.create(
                     admin_user=request.user,
                     action="User Onboarded",
-                    details=f"Finalized account for {access_req.email}. Username: {username}. Link sent."
+                    details=f"Finalized account for {access_req.email}. Username: {username}."
                 )
                 return redirect('cp_dashboard')
                 
@@ -354,7 +294,7 @@ def create_user_from_request(request, request_id):
 @cp_admin_required
 def resend_setup_link(request, pk):
     """
-    Generate and resend a secure password setup link.
+    Generate a new temporary password and send via email.
     """
     user = get_object_or_404(User, pk=pk)
     
@@ -362,35 +302,31 @@ def resend_setup_link(request, pk):
         messages.info(request, f"User {user.username} has already completed onboarding.")
         return redirect('cp_users')
 
-    if not user.whatsapp_number:
-        messages.error(request, f"User {user.username} does not have a WhatsApp number on file.")
-        return redirect('cp_users')
-
     try:
-        # Generate fresh token
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        setup_link = f"{request.build_absolute_uri('/')[:-1]}/accounts/setup-password/{uid}/{token}/"
+        import random
+        import string
+        chars = string.ascii_letters + string.digits + "!@#$%"
+        temp_pass = ''.join(random.choice(chars) for _ in range(10))
         
-        # Send Link with Fallback
-        ws_ok, em_ok = send_credential_notification(
-            user.username, user.email, user.whatsapp_number, 
-            user.username, setup_link, is_reset=True
-        )
+        user.set_password(temp_pass)
+        user.must_change_password = True
+        user.save()
         
-        if ws_ok or em_ok:
-            messages.success(request, f"Fresh setup link sent to {user.username} via {'WhatsApp' if ws_ok else 'Email'}.")
+        em_ok = send_setup_email(user.username, user.email, temp_pass, is_reset=True)
+        
+        if em_ok:
+            messages.success(request, f"New login credentials sent to {user.email}.")
         else:
-            messages.error(request, "Failed to send setup link via both channels.")
+            messages.error(request, "Failed to send new credentials via Email.")
 
         AdminAuditLog.objects.create(
             admin_user=request.user,
-            action="Resent Setup Link",
-            details=f"Generated new setup token for {user.email}."
+            action="Resent Credentials",
+            details=f"Generated new temporary password for {user.email}."
         )
         
     except Exception as e:
-        messages.error(request, f"Error resending link: {str(e)}")
+        messages.error(request, f"Error resending credentials: {str(e)}")
         
     return redirect('cp_users')
 
