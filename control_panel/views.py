@@ -51,40 +51,33 @@ def manage_requests(request):
 @cp_admin_required
 def approve_request(request, pk):
     """
-    Approve an access request and create a user account.
+    Step 1: Approve an access request and notify the user.
+    Redirects to user creation form.
     """
     access_req = get_object_or_404(AccessRequest, pk=pk)
+    
+    if access_req.status == 'approved':
+        messages.info(request, "This request is already approved.")
+        return redirect('cp_users')
 
-    # Check if user already exists
-    if User.objects.filter(email=access_req.email).exists():
-        messages.error(request, f"User with email {access_req.email} already exists.")
-    else:
-        # Generate a simple username from email if not provided
-        username = access_req.email.split('@')[0]
-        password = User.objects.make_random_password()
+    access_req.status = 'approved'
+    access_req.save()
 
-        user = User.objects.create_user(
-            username=username,
-            email=access_req.email,
-            password=password,
-            is_verified=True
-        )
+    # Step 1 Email: Approval Notification
+    subject = 'EduStream Access Request: Approved'
+    message = f'Hello {access_req.name},\n\nGood news! Your verification proof has been accepted and your access request to EduStream has been approved.\n\nOur administrator will now set up your account. You will receive a second email shortly with your login credentials.\n\nBest regards,\nEduStream Team'
+    recipient_list = [access_req.email]
+    
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
+        messages.success(request, f"Request approved. Notification email sent to {access_req.email}.")
+    except Exception as e:
+        messages.warning(request, f"Request approved, but notification email failed: {str(e)}.")
 
-        access_req.status = 'approved'
-        access_req.save()
+    # Redirect to user creation interface with email pre-filled (via session or GET)
+    request.session['prefill_email'] = access_req.email
+    return redirect('cp_users')
 
-        # Send approval email
-        subject = 'EduStream Access Approved'
-        message = f'Hello {access_req.name},\n\nYour access request to EduStream has been approved!\n\nUsername: {username}\nPassword: {password}\n\nYou can now log in at: {request.build_absolute_uri("/login/")}\n\nBest regards,\nEduStream Team'
-        recipient_list = [access_req.email]
-        
-        try:
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
-            messages.success(request, f"Approved! Account created and email sent to {access_req.email}.")
-        except Exception as e:
-            messages.warning(request, f"Approved and account created, but email failed: {str(e)}. Password: {password}")
-
-    return redirect('cp_requests')
 
 
 @cp_admin_required
@@ -152,9 +145,10 @@ def delete_video(request, pk):
 @cp_admin_required
 def manage_users(request):
     """
-    Manage users (list, create, edit).
+    Manage users (list, create, edit). Sends credentials email on creation.
     """
     users = User.objects.all().order_by('-date_joined')
+    prefill_email = request.session.pop('prefill_email', '')
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -165,11 +159,30 @@ def manage_users(request):
             if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists():
                 messages.error(request, "User with this username or email already exists.")
             else:
-                User.objects.create_user(username=username, email=email, password=password, is_verified=True)
-                messages.success(request, f"User '{username}' created successfully.")
+                try:
+                    user = User.objects.create_user(
+                        username=username, 
+                        email=email, 
+                        password=password, 
+                        is_verified=True
+                    )
+                    
+                    # Step 2 Email: Credentials
+                    subject = 'EduStream: Your Login Credentials'
+                    login_url = request.build_absolute_uri("/login/")
+                    message = f'Hello,\n\nYour EduStream account is ready.\n\nUsername: {username}\nPassword: {password}\n\nYou can log in here: {login_url}\n\nPlease keep these credentials secure.\n\nBest regards,\nEduStream Team'
+                    
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+                    messages.success(request, f"User '{username}' created and credentials sent to {email}.")
+                    return redirect('cp_users')
+                except Exception as e:
+                    messages.error(request, f"Error creating user or sending email: {str(e)}")
+        else:
+            messages.error(request, "All fields are required.")
         return redirect('cp_users')
 
-    return render(request, 'control_panel/users.html', {'users': users})
+    return render(request, 'control_panel/users.html', {'users': users, 'prefill_email': prefill_email})
+
 
 
 @cp_admin_required

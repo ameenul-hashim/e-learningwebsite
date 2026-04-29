@@ -157,7 +157,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f"EduStream <{EMAIL_HOST_USER}>"
+DEFAULT_FROM_EMAIL = "EduStream <hashimhakkim67@gmail.com>"
 
 # Celery Strategy (Fail-Safe)
 CELERY_BROKER_URL = os.getenv('REDIS_URL')
