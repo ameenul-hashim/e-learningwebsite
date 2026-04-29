@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.core.cache import cache
 from functools import wraps
-from twilio.rest import Client
+# from twilio.rest import Client
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -28,26 +28,27 @@ def send_whatsapp_notification(to_number, message_body):
     """
     Helper to send WhatsApp messages via Twilio with validation.
     """
-    try:
-        normalized_to = normalize_phone(to_number)
-        
-        # Twilio sandbox requires the number to be prefixed with 'whatsapp:'
-        formatted_to = f"whatsapp:{normalized_to}"
-            
-        client = Client(
-            os.getenv('TWILIO_ACCOUNT_SID'), 
-            os.getenv('TWILIO_AUTH_TOKEN')
-        )
-        
-        client.messages.create(
-            from_=os.getenv('TWILIO_WHATSAPP_NUMBER'),
-            body=message_body,
-            to=formatted_to
-        )
-        return True
-    except Exception as e:
-        print(f"Twilio Send Error: {str(e)}")
-        return False
+    return False
+    # try:
+    #     normalized_to = normalize_phone(to_number)
+    #     
+    #     # Twilio sandbox requires the number to be prefixed with 'whatsapp:'
+    #     formatted_to = f"whatsapp:{normalized_to}"
+    #         
+    #     client = Client(
+    #         os.getenv('TWILIO_ACCOUNT_SID'), 
+    #         os.getenv('TWILIO_AUTH_TOKEN')
+    #     )
+    #     
+    #     client.messages.create(
+    #         from_=os.getenv('TWILIO_WHATSAPP_NUMBER'),
+    #         body=message_body,
+    #         to=formatted_to
+    #     )
+    #     return True
+    # except Exception as e:
+    #     print(f"Twilio Send Error: {str(e)}")
+    #     return False
 
 def send_credential_notification(user_name, email, whatsapp, username, setup_link, is_reset=False):
     """

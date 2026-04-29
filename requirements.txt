@@ -1,12 +1,6 @@
-django
+Django>=4.0,<5.0
 gunicorn
+psycopg2==2.9.9
 whitenoise[brotli]
 python-dotenv
 dj-database-url
-psycopg2-binary
-twilio
-django-ratelimit
-django-redis
-redis
-djangorestframework
-djangorestframework-simplejwt
