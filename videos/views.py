@@ -10,5 +10,12 @@ def dashboard(request):
 @login_required
 def subject_detail(request, subject_id):
     subject = get_object_or_404(Subject, id=subject_id)
-    videos = subject.videos.all()
-    return render(request, 'videos/subject_detail.html', {'subject': subject, 'videos': videos})
+    return render(request, 'videos/subject_detail.html', {'subject': subject})
+
+# urls.py content
+from django.urls import path
+from . import views
+urlpatterns = [
+    path('', views.dashboard, name='dashboard'),
+    path('subject/<int:subject_id>/', views.subject_detail, name='subject_detail'),
+]

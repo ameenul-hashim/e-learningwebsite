@@ -1,55 +1,96 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
-    <!-- Content Management -->
-    <div class="bg-white p-8 rounded-3xl border border-slate-100">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-black">Content Hub</h2>
-            <button onclick="document.getElementById('subMod').classList.toggle('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Add Subject</button>
+<div class="space-y-12">
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Students</p>
+            <p class="text-5xl font-black text-slate-900">{{ total_users }}</p>
         </div>
-        
-        <div class="space-y-4">
-            {% for subject in subjects %}
-            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <h3 class="font-bold text-slate-900">{{ subject.name }}</h3>
-                <p class="text-xs text-slate-500 mb-3">{{ subject.videos.count }} Videos</p>
-                <form action="{% url 'add_video' subject.id %}" method="POST" class="flex gap-2">
+        <a href="{% url 'pending_requests' %}" class="group bg-blue-600 p-10 rounded-[2.5rem] shadow-xl shadow-blue-200 transition transform hover:-translate-y-1">
+            <p class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2">Pending Verification</p>
+            <div class="flex items-center justify-between">
+                <p class="text-5xl font-black text-white">{{ pending_count }}</p>
+                <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </a>
+        <a href="{% url 'user_management' %}" class="bg-slate-900 p-10 rounded-[2.5rem] shadow-xl shadow-slate-200 transition transform hover:-translate-y-1">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Students</p>
+            <p class="text-5xl font-black text-white">{{ active_count }}</p>
+        </a>
+    </div>
+
+    <!-- Content Management -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Subjects List -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="flex items-center justify-between">
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Academic Content</h2>
+            </div>
+
+            <div class="space-y-6">
+                {% for subject in subjects %}
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-10">
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-900">{{ subject.name }}</h3>
+                            <p class="text-slate-500 font-medium text-sm">{{ subject.videos.count }} Videos available</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="document.getElementById('videoMod{{subject.id}}').classList.remove('hidden')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white transition">Add Video</button>
+                            <a href="{% url 'delete_subject' subject.id %}" onclick="return confirm('Delete subject and all videos?')" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition">Delete</a>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for video in subject.videos.all %}
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                            <span class="text-sm font-bold text-slate-700">{{ video.title }}</span>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition">{{ video.youtube_url|truncatechars:30 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Video Modal -->
+                <div id="videoMod{{subject.id}}" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+                    <div class="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl">
+                        <h3 class="text-2xl font-black text-slate-900 mb-2">New Lesson</h3>
+                        <p class="text-slate-500 text-sm mb-8">Add video to <strong>{{ subject.name }}</strong></p>
+                        <form action="{% url 'add_video_admin' subject.id %}" method="POST" class="space-y-4">
+                            {% csrf_token %}
+                            <input type="text" name="title" placeholder="Lesson Title" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                            <input type="url" name="url" placeholder="YouTube URL" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-200 transition">SAVE VIDEO</button>
+                            <button type="button" onclick="document.getElementById('videoMod{{subject.id}}').classList.add('hidden')" class="w-full text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-20 text-center bg-white rounded-[2.5rem] border border-slate-100 border-dashed">
+                    <p class="text-slate-400 font-bold uppercase tracking-widest">No subjects created yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Add Subject Sidebar -->
+        <div class="space-y-8">
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-10 sticky top-32">
+                <h2 class="text-2xl font-black text-slate-900 mb-2">Create Subject</h2>
+                <p class="text-slate-500 text-sm mb-8">Establish a new academic category</p>
+                <form action="{% url 'add_subject' %}" method="POST" class="space-y-4">
                     {% csrf_token %}
-                    <input type="text" name="title" placeholder="Title" class="flex-1 text-sm border rounded-lg px-3 py-1" required>
-                    <input type="url" name="youtube_url" placeholder="YouTube URL" class="flex-1 text-sm border rounded-lg px-3 py-1" required>
-                    <button class="bg-slate-900 text-white px-3 py-1 rounded-lg text-xs font-bold">+</button>
+                    <input type="text" name="name" placeholder="Subject Name" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    <textarea name="description" placeholder="Short Description" rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg shadow-slate-200 transition">CREATE SUBJECT</button>
                 </form>
             </div>
-            {% endfor %}
         </div>
-    </div>
-
-    <!-- User Management -->
-    <div class="bg-white p-8 rounded-3xl border border-slate-100">
-        <h2 class="text-2xl font-black mb-6">Student Roster</h2>
-        <div class="divide-y divide-slate-100">
-            {% for u in users %}
-            <div class="py-4 flex justify-between items-center">
-                <div>
-                    <p class="font-bold">{{ u.first_name }}</p>
-                    <p class="text-xs text-slate-500">{{ u.username }} | {{ u.email }}</p>
-                </div>
-                <span class="text-xs font-bold uppercase px-2 py-1 bg-green-100 text-green-700 rounded">{{ u.status }}</span>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-<div id="subMod" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-3xl w-full max-w-sm">
-        <h3 class="text-xl font-black mb-4">New Subject</h3>
-        <form action="{% url 'add_subject' %}" method="POST" class="space-y-4">
-            {% csrf_token %}
-            <input type="text" name="name" placeholder="Subject Name" class="w-full border rounded-xl px-4 py-3" required>
-            <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Create</button>
-            <button type="button" onclick="document.getElementById('subMod').classList.add('hidden')" class="w-full text-slate-400 text-sm">Cancel</button>
-        </form>
     </div>
 </div>
 {% endblock %}

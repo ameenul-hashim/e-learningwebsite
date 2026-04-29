@@ -1,27 +1,91 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-10 rounded-3xl shadow-sm border border-slate-100 mt-12">
-    <h1 class="text-3xl font-black mb-6">Join Us</h1>
-    <form method="POST" class="space-y-4">
-        {% csrf_token %}
-        <div>
-            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Full Name</label>
-            <input type="text" name="first_name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-blue-100 border border-slate-100 overflow-hidden">
+        <div class="p-10">
+            <h1 class="text-4xl font-black text-slate-900 mb-2">Join Platform</h1>
+            <p class="text-slate-500 font-medium mb-10">Create your student account for verification</p>
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Username</label>
+                        {{ form.username }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Email</label>
+                        {{ form.email }}
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Contact Number</label>
+                        {{ form.contact_number }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="relative">
+                        <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Password</label>
+                        {{ form.password }}
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Confirm Password</label>
+                        {{ form.confirm_password }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Proof Upload (PDF/Image)</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-slate-300" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-slate-600">
+                                <label class="relative cursor-pointer bg-white rounded-md font-bold text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                    {{ form.proof_file }}
+                                </label>
+                            </div>
+                            <p class="text-xs text-slate-400">PDF, PNG, JPG up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if form.errors %}
+                <div class="p-4 bg-red-50 rounded-2xl border border-red-100 space-y-1">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p class="text-xs font-bold text-red-600 uppercase tracking-wide">● {{ field.label }}: {{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <p class="text-xs font-bold text-red-600 uppercase tracking-wide">● {{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-blue-700 shadow-xl shadow-blue-200 transition transform hover:scale-[1.01] active:scale-100">SUBMIT APPLICATION</button>
+            </form>
         </div>
-        <div>
-            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Username</label>
-            <input type="text" name="username" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
+        <div class="bg-slate-50 p-8 text-center border-t border-slate-100">
+            <p class="text-slate-500 text-sm font-medium">Have account? <a href="{% url 'login' %}" class="text-blue-600 font-black hover:underline">Log in</a></p>
         </div>
-        <div>
-            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Email</label>
-            <input type="email" name="email" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
-        </div>
-        <div>
-            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Password</label>
-            <input type="password" name="password" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
-        </div>
-        <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700">Create Account</button>
-    </form>
-    <p class="mt-6 text-center text-sm text-slate-500">Have account? <a href="{% url 'login' %}" class="text-blue-600 font-bold">Log in</a></p>
+    </div>
 </div>
+
+<style>
+    .form-input { @apply w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition; }
+    input[type="text"], input[type="password"], input[type="email"] {
+        width: 100%; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 1rem; padding: 1rem 1.25rem; outline: none; transition: all 0.2s;
+    }
+    input:focus { background: white; border-color: #3b82f6; box-shadow: 0 0 0 2px #3b82f6; }
+</style>
 {% endblock %}
