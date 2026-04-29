@@ -118,9 +118,9 @@ class ForceCredentialUpdateMiddleware:
 
     def __call__(self, request):
         if hasattr(request, 'user') and request.user.is_authenticated:
-            if request.user.must_change_password:
+            if getattr(request.user, "must_change_password", False):
                 # Allow access to force_password_change, logout, and static paths
-                allowed_paths = ['/accounts/logout/', '/force-password-change/']
+                allowed_paths = ['/logout/', '/accounts/logout/', '/force-password-change/']
                 if not any(request.path.startswith(path) for path in allowed_paths):
                     messages.warning(request, "You must update your username and password before continuing.")
                     return redirect('force_password_change')
