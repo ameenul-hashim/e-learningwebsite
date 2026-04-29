@@ -1,83 +1,109 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}EduStream - Secure Video Learning{% endblock %}</title>
+    <title>{% block title %}EduStream - OTT Learning{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aqua: {
+                            50: '#f0feff',
+                            100: '#e0f9ff',
+                            200: '#bdf2ff',
+                            300: '#7debff',
+                            400: '#33dcff',
+                            50: '#00f5ff',
+                            600: '#00cce6',
+                            700: '#00a3b8',
+                            800: '#008191',
+                            900: '#066a78',
+                            950: '#024651',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.0">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .aqua-gradient { background: linear-gradient(135deg, #00f5ff 0%, #0077ff 100%); }
+        .text-gradient { background: linear-gradient(135deg, #00f5ff 0%, #0077ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
     
     {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid px-5">
-            <a class="navbar-brand fw-bold" href="{% url 'landing' %}">
-                EDUSTREAM
+<body class="bg-[#0a0f18] text-slate-200 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 glass border-b border-white/10 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="{% url 'landing' %}" class="text-2xl font-black italic tracking-tighter text-white">
+                EDU<span class="text-aqua-500">STREAM</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item me-3">
-                            <span class="text-light small">Welcome, <strong>{{ user.username }}</strong></span>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm me-2">My List</a>
-                        </li>
-                        <li class="nav-item">
-                            <form action="{% url 'logout' %}" method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">Sign Out</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a href="{% url 'login' %}" class="btn btn-danger btn-sm px-4">Sign In</a>
-                        </li>
-                    {% endif %}
-                </ul>
+            
+            <div class="flex items-center gap-6">
+                {% if user.is_authenticated %}
+                    <div class="hidden md:flex items-center gap-4 text-sm font-medium">
+                        <a href="{% url 'dashboard' %}" class="hover:text-aqua-400 transition-colors">Dashboard</a>
+                        {% if user.is_staff %}
+                            <a href="{% url 'cp_dashboard' %}" class="text-aqua-400 font-bold">Control Panel</a>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="hidden lg:block text-xs text-slate-400">Hi, <b>{{ user.username }}</b></span>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-xl text-xs font-bold border border-red-500/20 transition-all">Sign Out</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="aqua-gradient text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-aqua-500/20 hover:scale-105 transition-transform">Sign In</a>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <main class="container mt-5 fade-in">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+    <!-- Global Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto w-full px-6 mt-4 space-y-2">
+        {% for message in messages %}
+            <div class="p-4 rounded-xl text-sm font-medium border {% if message.tags == 'error' %}bg-red-500/10 border-red-500/20 text-red-400{% else %}bg-green-500/10 border-green-500/20 text-green-400{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
+    <!-- Main Content -->
+    <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2026 EduStream Secure Learning Platform. All rights reserved.</p>
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-10 px-6 mt-20">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="text-xl font-bold text-white mb-4 italic">EDU<span class="text-aqua-500">STREAM</span></div>
+            <p class="text-slate-500 text-sm">&copy; 2026 Calicut University Unofficial Notes And Classes. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Disable right-click for content protection
         document.addEventListener('contextmenu', event => event.preventDefault());
         
-        // Prevent keyboard shortcuts for inspection (basic protection)
+        // Prevent keyboard shortcuts for inspection
         document.onkeydown = function(e) {
             if (e.keyCode == 123) return false;
             if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
@@ -88,3 +114,4 @@
     </script>
 </body>
 </html>
+

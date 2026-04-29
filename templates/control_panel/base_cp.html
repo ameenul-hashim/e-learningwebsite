@@ -4,165 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EduStream Control Panel{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --sidebar-width: 260px;
-            --cp-grad-start: #ffffff;
-            --cp-grad-mid: #e0f7fa;
-            --cp-accent: #00adb5;
-            --cp-accent-warm: #00838f;
-        }
-
-        body {
-            background: #f8f9fa;
-            background-attachment: fixed;
-            font-family: 'Inter', sans-serif;
-            color: #212529;
-        }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            background: #ffffff;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-            z-index: 1000;
-            padding-top: 20px;
-            overflow-y: auto;
-        }
-
-        .sidebar-brand {
-            padding: 20px;
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--cp-accent);
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            margin-bottom: 20px;
-            letter-spacing: 1px;
-        }
-
-        .sidebar-link {
-            padding: 12px 25px;
-            display: flex;
-            align-items: center;
-            color: #495057;
-            text-decoration: none;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-            background: rgba(0, 173, 181, 0.1);
-            color: var(--cp-accent-warm);
-            border-left-color: var(--cp-accent);
-        }
-        .sidebar-link i { margin-right: 12px; font-size: 1.1rem; }
-
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 35px;
-            min-height: 100vh;
-        }
-
-        .card {
-            border: none;
-            border-radius: 16px;
-            background: #ffffff;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
-        .stat-card {
-            padding: 25px;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(102,126,234,0.15);
-        }
-
-        .btn-action {
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .table { color: #212529; }
-        .table-hover tbody tr:hover { background: rgba(0,173,181,0.05); }
-        .table-light { background: #f8f9fa !important; color: #495057 !important; }
-        .table-light th { background: transparent !important; color: #495057 !important; border-color: #dee2e6 !important; }
-        td, th { border-color: #dee2e6 !important; }
-
-        .btn-success { background: #10b981; border: none; }
-        .btn-danger { background: #ef4444; border: none; }
-        .btn-primary { background: linear-gradient(135deg, var(--cp-accent), var(--cp-accent-warm)); border: none; color: white; }
-        .btn-outline-primary { border-color: var(--cp-accent); color: var(--cp-accent); }
-        .btn-outline-primary:hover { background: linear-gradient(135deg, var(--cp-accent), var(--cp-accent-warm)); border-color: transparent; color: white; }
-
-        .alert { border-radius: 12px; }
-
-        @media (max-width: 768px) {
-            .sidebar { width: 100%; height: auto; position: relative; }
-            .main-content { margin-left: 0; padding: 20px; }
-        }
+        body { font-family: 'Outfit', sans-serif; }
     </style>
+    
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex">
 
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <i class="bi bi-shield-lock-fill"></i> EDUSTREAM CP
+    <!-- Sidebar -->
+    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col fixed h-screen z-50">
+        <div class="p-8 pb-4">
+            <div class="text-2xl font-black italic tracking-tighter text-slate-900 mb-1">
+                EDU<span class="text-blue-600">STREAM</span>
+            </div>
+            <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Control Panel</div>
         </div>
 
-        <a href="{% url 'cp_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_dashboard' %}active{% endif %}">
-            <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
-        <a href="{% url 'cp_requests' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_requests' %}active{% endif %}">
-            <i class="bi bi-person-plus"></i> Access Requests
-        </a>
-        <a href="{% url 'cp_users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_users' %}active{% endif %}">
-            <i class="bi bi-people"></i> Manage Users
-        </a>
-        <a href="{% url 'cp_categories' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_categories' %}active{% endif %}">
-            <i class="bi bi-journal-bookmark"></i> Manage Subjects
-        </a>
-        <a href="{% url 'cp_videos' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cp_videos' %}active{% endif %}">
-            <i class="bi bi-collection-play"></i> Manage Videos
-        </a>
-        <a href="{% url 'dashboard' %}" class="sidebar-link">
-            <i class="bi bi-arrow-left-circle"></i> Exit to Site
-        </a>
-
-        <div style="position: absolute; bottom: 20px; width: 100%;">
-            <div class="px-3 mb-2 text-muted small">Logged in as: <strong class="text-dark">{{ request.user.username }}</strong></div>
-            <a href="{% url 'cp_logout' %}" class="sidebar-link text-danger">
-                <i class="bi bi-box-arrow-left"></i> Logout
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto mt-4">
+            <a href="{% url 'cp_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all {% if request.resolver_match.url_name == 'cp_dashboard' %}bg-blue-50 text-blue-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Overview
             </a>
-        </div>
-    </div>
+            <a href="{% url 'cp_requests' %}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all {% if request.resolver_match.url_name == 'cp_requests' %}bg-blue-50 text-blue-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                Access Requests
+            </a>
+            <a href="{% url 'cp_users' %}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all {% if request.resolver_match.url_name == 'cp_users' %}bg-blue-50 text-blue-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Student Records
+            </a>
+            <a href="{% url 'cp_categories' %}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all {% if request.resolver_match.url_name == 'cp_categories' %}bg-blue-50 text-blue-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Subject Groups
+            </a>
+            <a href="{% url 'cp_videos' %}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all {% if request.resolver_match.url_name == 'cp_videos' %}bg-blue-50 text-blue-600{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 00-2 2z"></path></svg>
+                Video Assets
+            </a>
 
-    <div class="main-content">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="pt-6 mt-6 border-t border-slate-100">
+                <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-900 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Student Portal
+                </a>
+            </div>
+        </nav>
+
+        <div class="p-6 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Admin</div>
+                    <div class="text-sm font-bold text-slate-900">{{ request.user.username }}</div>
                 </div>
-            {% endfor %}
-        {% endif %}
+                <form action="{% url 'cp_logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
 
-        {% block content %}{% endblock %}
-    </div>
+    <!-- Main Content -->
+    <main class="flex-1 ml-72 min-h-screen">
+        <!-- Top Bar for Messages -->
+        <div class="sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md px-12 py-4 flex flex-col gap-2">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="px-6 py-4 rounded-2xl text-sm font-bold border shadow-sm {% if message.tags == 'error' %}bg-red-50 border-red-100 text-red-600{% else %}bg-green-50 border-green-100 text-green-600{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <div class="p-12">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
 </body>
 </html>
+

@@ -3,55 +3,89 @@
 {% block title %}Watching: {{ video.title }} - EduStream{% endblock %}
 
 {% block content %}
-<div class="watch-container">
-    <div class="video-player-wrapper px-3 px-md-5">
-        <div class="ratio ratio-16x9 video-frame">
-            <iframe
-                src="{{ video.embed_url }}?autoplay=1"
-                title="{{ video.title }}"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-            </iframe>
-        </div>
+<main class="max-w-7xl mx-auto px-6 py-12">
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 mb-8">
+        <a href="{% url 'dashboard' %}" class="hover:text-aqua-400 transition-colors">Dashboard</a>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+        <a href="{% url 'subject_videos' video.category.id %}" class="hover:text-aqua-400 transition-colors">{{ video.category.name }}</a>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+        <span class="text-white truncate max-w-[200px]">{{ video.title }}</span>
+    </nav>
 
-        <div class="video-details mt-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
-                <div>
-                    <h1 class="fw-bold h3 h2-md text-gradient">{{ video.title }}</h1>
-                    <p class="text-gray">{{ video.category.name }} • {{ video.created_at|date:"M d, Y" }}</p>
-                </div>
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
-                </a>
-            </div>
-            <hr class="border-secondary my-4" style="border-color: var(--border-subtle) !important;">
-            <div class="description-box p-3 rounded">
-                <p class="mb-0 text-secondary small">You are watching secure content provided by EduStream. Sharing or unauthorized recording is strictly prohibited.</p>
+    <!-- Video Player Section -->
+    <div class="relative group">
+        <!-- Glow Effect Behind Player -->
+        <div class="absolute -inset-1 bg-gradient-to-r from-aqua-500 to-blue-600 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+        
+        <div class="relative bg-black rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+            <div class="aspect-video w-full">
+                <iframe
+                    src="{{ video.embed_url }}?autoplay=1&modestbranding=1&rel=0"
+                    title="{{ video.title }}"
+                    class="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Video Info -->
+    <div class="mt-12 grid lg:grid-cols-3 gap-12">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-full bg-aqua-500/10 border border-aqua-500/20 text-[10px] font-black text-aqua-400 uppercase tracking-widest">
+                    {{ video.category.name }}
+                </span>
+                <span class="text-slate-600 text-xs font-bold">•</span>
+                <span class="text-slate-500 text-xs font-bold uppercase tracking-widest">Uploaded {{ video.created_at|date:"d M Y" }}</span>
+            </div>
+            
+            <h1 class="text-4xl font-black text-white leading-tight tracking-tight">{{ video.title }}</h1>
+            
+            <div class="glass p-8 rounded-[2rem] border-white/5">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Lecture Description</h3>
+                <p class="text-slate-300 leading-relaxed font-medium">
+                    This video is part of the <b class="text-aqua-400">{{ video.category.name }}</b> series. 
+                    It is provided exclusively for registered students of Calicut University via the EduStream Secure Portal.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sidebar / Meta Info -->
+        <div class="space-y-6">
+            <div class="glass p-8 rounded-[2.5rem] border-white/5 space-y-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl aqua-gradient flex items-center justify-center shadow-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold">Secure Player</h4>
+                        <p class="text-slate-500 text-xs font-medium mt-0.5">Content Protection Enabled</p>
+                    </div>
+                </div>
+                
+                <div class="pt-6 border-t border-white/5">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Course Info</p>
+                    <div class="space-y-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Subject</span>
+                            <span class="text-white font-bold">{{ video.category.name }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Format</span>
+                            <span class="text-white font-bold">HD Video</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'subject_videos' video.category.id %}" class="block w-full bg-white/5 hover:bg-white/10 border border-white/10 text-center py-4 rounded-2xl text-xs font-black text-white uppercase tracking-widest transition-all">
+                    Browse Subject
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
 {% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<style>
-    main.container { max-width: 100% !important; padding: 0 !important; margin-top: 0 !important; }
-    .watch-container { padding-top: 90px; padding-bottom: 50px; min-height: 100vh; }
-    .video-player-wrapper { max-width: 1100px; margin: 0 auto; }
-    .video-frame {
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
-        border: 1px solid var(--border-subtle);
-    }
-    .description-box {
-        background: var(--surface-card);
-        border: 1px solid var(--border-subtle);
-    }
-    @media (max-width: 768px) {
-        .watch-container { padding-top: 75px; }
-        .video-frame { border-radius: 10px; }
-    }
-</style>
-{% endblock %}

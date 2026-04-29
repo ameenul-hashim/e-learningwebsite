@@ -1,201 +1,94 @@
 {% extends 'base.html' %}
 
-{% block title %}Explore - EduStream{% endblock %}
+{% block title %}Dashboard - EduStream{% endblock %}
 
 {% block content %}
-<div class="ott-container">
-    <!-- Search Bar -->
-    <div class="search-section px-4 px-md-5 mb-4">
-        <form action="{% url 'dashboard' %}" method="get" class="d-flex">
-            <div class="input-group search-group">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" name="q" class="form-control" placeholder="Search titles, categories..." value="{{ query|default:'' }}">
-            </div>
-        </form>
-    </div>
-
-    <!-- Continue Watching -->
-    {% if history %}
-    <div class="category-section mb-5">
-        <h2 class="category-title">Continue Watching</h2>
-        <div class="video-row">
-            {% for item in history %}
-            <div class="video-card-ott">
-                <a href="{% url 'watch_video' item.video.id %}" class="text-decoration-none">
-                    <div class="card-img-wrapper">
-                        <img src="{{ item.video.thumbnail_url }}" alt="{{ item.video.title }}" loading="lazy">
-                        <div class="card-overlay">
-                            <i class="bi bi-play-fill"></i>
-                        </div>
-                    </div>
-                    <div class="card-info">
-                        <h3 class="video-title">{{ item.video.title }}</h3>
-                    </div>
-                </a>
-            </div>
-            {% endfor %}
+<main class="max-w-7xl mx-auto px-6 py-12">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+            <h1 class="text-4xl font-black text-white tracking-tight">Explore <span class="text-gradient">Subjects</span></h1>
+            <p class="text-slate-500 mt-2 font-medium">Choose a category to browse specific video lectures.</p>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="w-full md:w-96 relative group">
+            <form action="{% url 'dashboard' %}" method="get">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-aqua-400 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" name="q" value="{{ query|default:'' }}" class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:border-aqua-500/50 focus:ring-4 focus:ring-aqua-500/10 transition-all placeholder:text-slate-600 text-sm" placeholder="Search for subjects or topics...">
+            </form>
         </div>
     </div>
+
+    <!-- Continue Watching (If History Exists) -->
+    {% if history %}
+    <section class="mb-16">
+        <h2 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 ml-1">Continue Watching</h2>
+        <div class="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
+            {% for item in history %}
+            <a href="{% url 'watch_video' item.video.id %}" class="flex-shrink-0 w-80 group">
+                <div class="relative aspect-video rounded-3xl overflow-hidden mb-4 border border-white/10 group-hover:border-aqua-500/50 transition-all shadow-lg group-hover:shadow-aqua-500/20">
+                    <img src="{{ item.video.thumbnail_url }}" alt="{{ item.video.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="w-12 h-12 rounded-full aqua-gradient flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="text-white font-bold text-sm truncate group-hover:text-aqua-400 transition-colors">{{ item.video.title }}</h3>
+                <p class="text-slate-500 text-xs mt-1 font-medium">{{ item.video.category.name }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
     {% endif %}
 
-    <!-- Subjects / Categories -->
-    <div class="category-section mb-5">
-        <h2 class="category-title mb-4">Explore Subjects</h2>
-        <div class="row g-4">
-            {% for category in categories %}
-            <div class="col-md-4 col-sm-6">
-                <a href="{% url 'subject_videos' category.id %}" class="text-decoration-none">
-                    <div class="subject-card">
-                        <div class="subject-card-content">
-                            <h3 class="subject-title">{{ category.name }}</h3>
-                            <p class="subject-count">{{ category.videos.count }} Videos</p>
-                        </div>
-                        <div class="subject-card-overlay">
-                            <i class="bi bi-folder2-open"></i>
-                        </div>
-                    </div>
-                </a>
+    <!-- Subjects Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {% for category in categories %}
+        <a href="{% url 'subject_videos' category.id %}" class="group block relative aspect-[4/5] rounded-[2.5rem] overflow-hidden border border-white/10 hover:border-aqua-500/50 transition-all shadow-2xl">
+            <!-- Background Gradient -->
+            <div class="absolute inset-0 bg-gradient-to-br from-aqua-500/20 to-blue-600/30 group-hover:from-aqua-500/30 group-hover:to-blue-600/40 transition-colors"></div>
+            
+            <!-- Icon/Initials Decor -->
+            <div class="absolute -top-6 -right-6 text-9xl font-black text-white opacity-[0.03] group-hover:opacity-[0.06] transition-opacity uppercase pointer-events-none">
+                {{ category.name|slice:":2" }}
             </div>
-            {% empty %}
-            <div class="col-12 text-center py-5">
-                <h3 class="text-gray">No subjects found. Add some in the Control Panel!</h3>
+
+            <!-- Content -->
+            <div class="absolute inset-0 p-8 flex flex-col justify-end">
+                <div class="mb-4">
+                    <span class="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-widest border border-white/10">
+                        {{ category.videos.count }} Video{{ category.videos.count|pluralize }}
+                    </span>
+                </div>
+                <h2 class="text-3xl font-black text-white leading-tight mb-2 group-hover:text-aqua-400 transition-colors">{{ category.name }}</h2>
+                <p class="text-slate-400 text-sm font-medium line-clamp-2">{{ category.description|default:"Curated learning path for academic excellence." }}</p>
+                
+                <div class="mt-8 flex items-center gap-3 text-aqua-400 font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all">
+                    Explore Now
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </div>
             </div>
-            {% endfor %}
+        </a>
+        {% empty %}
+        <div class="col-span-full py-20 text-center glass rounded-[3rem] border-dashed">
+            <div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">No Subjects Available</h3>
+            <p class="text-slate-500 font-medium">Check back later or contact admin for enrollment.</p>
         </div>
+        {% endfor %}
     </div>
-</div>
-{% endblock %}
+</main>
 
-{% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>
-    main.container { max-width: 100% !important; padding: 0 !important; margin-top: 0 !important; }
-    .ott-container { padding-top: 100px; min-height: 100vh; }
-
-    .category-section { padding: 0 4%; }
-    .category-title {
-        color: var(--text-primary);
-        font-size: clamp(1rem, 1.4vw, 1.4rem);
-        font-weight: 700;
-        margin-bottom: 0.5em;
-    }
-
-    .video-row {
-        display: flex;
-        overflow-x: scroll;
-        gap: 14px;
-        padding: 20px 0;
-        scrollbar-width: none;
-    }
-    .video-row::-webkit-scrollbar { display: none; }
-
-    .video-card-ott {
-        min-width: 280px;
-        flex: 0 0 auto;
-        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-subtle);
-        background: var(--surface-card);
-    }
-    .video-card-ott:hover {
-        transform: scale(1.06);
-        z-index: 2;
-        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.25);
-        border-color: rgba(102, 126, 234, 0.4);
-    }
-
-    .card-img-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; }
-    .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-
-    .card-overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.3));
-        display: flex; align-items: center; justify-content: center;
-        opacity: 0; transition: opacity 0.3s ease;
-    }
-    .video-card-ott:hover .card-overlay { opacity: 1; }
-    .card-overlay i { font-size: 3rem; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-
-    .card-info { padding: 12px 14px; }
-    .video-title { font-size: 0.95rem; color: var(--text-primary); margin: 0; font-weight: 600; }
-
-    .search-group { max-width: 450px; }
-    .search-group .input-group-text {
-        background: var(--surface-card);
-        border: 1px solid var(--border-subtle);
-        border-right: none;
-        color: var(--text-secondary);
-        border-radius: 10px 0 0 10px;
-    }
-    .search-group .form-control {
-        background: var(--surface-card);
-        border: 1px solid var(--border-subtle);
-        border-left: none;
-        color: white;
-        border-radius: 0 10px 10px 0;
-        padding: 12px;
-    }
-    .search-group .form-control:focus {
-        background: var(--surface-card-hover);
-        box-shadow: none;
-        border-color: var(--accent-primary);
-        color: white;
-    }
-    .search-group .form-control::placeholder { color: var(--text-muted); }
-
-    /* Subject Card Styles */
-    .subject-card {
-        background: linear-gradient(135deg, rgba(0,173,181,0.1), rgba(0,131,143,0.2));
-        border: 1px solid var(--border-subtle);
-        border-radius: 16px;
-        padding: 30px 20px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s ease;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .subject-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 173, 181, 0.2);
-        border-color: var(--accent-primary);
-        background: linear-gradient(135deg, rgba(0,173,181,0.2), rgba(0,131,143,0.3));
-    }
-    .subject-card-content {
-        z-index: 2;
-    }
-    .subject-title {
-        color: var(--text-primary);
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 0 0 5px;
-    }
-    .subject-count {
-        color: var(--accent-warm);
-        font-size: 0.9rem;
-        margin: 0;
-        font-weight: 500;
-    }
-    .subject-card-overlay {
-        font-size: 3.5rem;
-        color: rgba(255,255,255,0.05);
-        position: absolute;
-        right: 15px;
-        bottom: -10px;
-        transition: all 0.4s ease;
-    }
-    .subject-card:hover .subject-card-overlay {
-        color: rgba(0, 229, 255, 0.15);
-        transform: scale(1.1) rotate(-5deg);
-    }
-
-    @media (max-width: 768px) {
-        .ott-container { padding-top: 80px; }
-        .video-card-ott { min-width: 240px; }
-        .category-section { padding: 0 3%; }
-    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 {% endblock %}
+
