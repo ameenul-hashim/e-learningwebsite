@@ -30,10 +30,23 @@ def send_setup_email(username, email, password, is_reset=False):
             f"⚠️ You must change your username and password immediately after logging in.\n\n"
             f"Best regards,\nEduStream Team"
         )
-        send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [email])
+        def send_async():
+            try:
+                send_mail(
+                    subject, 
+                    email_message, 
+                    settings.DEFAULT_FROM_EMAIL, 
+                    [email],
+                    fail_silently=True
+                )
+            except Exception as e:
+                print(f"Async Email Error: {str(e)}")
+
+        import threading
+        threading.Thread(target=send_async).start()
         return True
     except Exception as e:
-        print(f"Email Error: {str(e)}")
+        print(f"Email Setup Error: {str(e)}")
         return False
 
 def send_rejection_email(email):
@@ -41,20 +54,27 @@ def send_rejection_email(email):
     Sends rejection email.
     """
     try:
-        send_mail(
-            "EduStream Access Request",
-            "Dear Student,\n\n"
-            "Your access request was declined.\n"
-            "Reason: Submitted proof is not sufficient.\n\n"
-            "Please submit valid documents again.\n\n"
-            "Regards,\nEduStream Team",
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
+        def send_async():
+            try:
+                send_mail(
+                    "EduStream Access Request",
+                    "Dear Student,\n\n"
+                    "Your access request was declined.\n"
+                    "Reason: Submitted proof is not sufficient.\n\n"
+                    "Please submit valid documents again.\n\n"
+                    "Regards,\nEduStream Team",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=True,
+                )
+            except Exception as e:
+                print(f"Async Email Rejection Error: {str(e)}")
+        
+        import threading
+        threading.Thread(target=send_async).start()
         return True
     except Exception as e:
-        print(f"Email Rejection Error: {str(e)}")
+        print(f"Email Rejection Setup Error: {str(e)}")
         return False
 
 
