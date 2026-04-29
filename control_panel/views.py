@@ -53,70 +53,112 @@ def manage_requests(request):
 @cp_admin_required
 def approve_request(request, pk):
     """
-    Step 1: Approve an access request and notify the user.
-    Redirects to user creation form.
+    Approve an access request, automatically create a user, and notify them.
     """
+    from django.utils.crypto import get_random_string
+    
     access_req = get_object_or_404(AccessRequest, pk=pk)
     
     if access_req.status == 'approved':
-        messages.info(request, "This request is already approved.")
-        return redirect('cp_users')
+        messages.info(request, f"Request from {access_req.email} was already approved.")
+        return redirect('cp_requests')
 
-    access_req.status = 'approved'
-    access_req.save()
+    # Check for duplicate email
+    if User.objects.filter(email=access_req.email).exists():
+        access_req.status = 'approved' # Sync status anyway
+        access_req.save()
+        messages.warning(request, f"User with email {access_req.email} already exists. Skipping user creation.")
+        return redirect('cp_requests')
 
-    # Log admin action
-    AdminAuditLog.objects.create(
-        admin_user=request.user,
-        action="Approved Request",
-        details=f"Approved request from {access_req.email}"
-    )
-
-    # Step 1 Email: Approval Notification
-
-    subject = 'EduStream Access Request: Approved'
-    message = f'Hello {access_req.name},\n\nGood news! Your verification proof has been accepted and your access request to EduStream has been approved.\n\nOur administrator will now set up your account. You will receive a second email shortly with your login credentials.\n\nBest regards,\nEduStream Team'
-    recipient_list = [access_req.email]
-    
     try:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
-        messages.success(request, f"Request approved. Notification email sent to {access_req.email}.")
+        # Generate safe password and unique username
+        generated_password = get_random_string(12)
+        base_username = access_req.name.lower().replace(' ', '_')[:20]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=access_req.email,
+            password=generated_password,
+            is_verified=True
+        )
+        
+        access_req.status = 'approved'
+        access_req.save()
+
+        # Log action
+        AdminAuditLog.objects.create(
+            admin_user=request.user,
+            action="Approved & Created User",
+            details=f"Approved {access_req.email}, Created user: {username}"
+        )
+
+        # Step 2 Email: Credentials
+        subject = 'EduStream: Your Account is Ready'
+        login_url = request.build_absolute_uri("/login/")
+        message = (
+            f"Hello {access_req.name},\n\n"
+            f"Your access request to EduStream has been approved. Your account has been created successfully.\n\n"
+            f"Login Credentials:\n"
+            f"Username: {username}\n"
+            f"Password: {generated_password}\n\n"
+            f"Login here: {login_url}\n\n"
+            f"Best regards,\nEduStream Team"
+        )
+        
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
+            messages.success(request, f"User '{username}' created and credentials sent to {access_req.email}.")
+        except Exception as e:
+            messages.warning(request, f"User created ({username}), but email failed to send: {str(e)}")
+
     except Exception as e:
-        messages.warning(request, f"Request approved, but notification email failed: {str(e)}.")
+        messages.error(request, f"Critical error during approval: {str(e)}")
+        return redirect('cp_requests')
 
-    # Redirect to user creation interface with email pre-filled (via session or GET)
-    request.session['prefill_email'] = access_req.email
-    return redirect('cp_users')
-
+    return redirect('cp_requests')
 
 
 @cp_admin_required
 def decline_request(request, pk):
     """
-    Decline an access request.
+    Decline an access request safely.
     """
     access_req = get_object_or_404(AccessRequest, pk=pk)
-    access_req.status = 'declined'
-    access_req.save()
     
-    # Log admin action
-    AdminAuditLog.objects.create(
-        admin_user=request.user,
-        action="Declined Request",
-        details=f"Declined request from {access_req.email}"
-    )
-    
-    # Send rejection email
+    if access_req.status != 'pending':
+        messages.info(request, "This request has already been processed.")
+        return redirect('cp_requests')
 
-    subject = 'EduStream Access Request Update'
-    message = f'Hello {access_req.name},\n\nWe regret to inform you that your access request to EduStream has been declined at this time.\n\nBest regards,\nEduStream Team'
-    recipient_list = [access_req.email]
-    
     try:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
-        messages.info(request, f"Request from {access_req.name} declined and email sent.")
+        access_req.status = 'declined'
+        access_req.save()
+        
+        # Log action
+        AdminAuditLog.objects.create(
+            admin_user=request.user,
+            action="Declined Request",
+            details=f"Declined request from {access_req.email}"
+        )
+        
+        # Send rejection email
+        subject = 'EduStream Access Request Update'
+        message = f"Hello {access_req.name},\n\nWe regret to inform you that your access request to EduStream has been declined at this time.\n\nBest regards,\nEduStream Team"
+        
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
+            messages.info(request, f"Request from {access_req.name} declined and email sent.")
+        except Exception as e:
+            messages.warning(request, f"Request declined, but notification email failed: {str(e)}")
+            
     except Exception as e:
-        messages.warning(request, f"Request declined, but email failed: {str(e)}.")
+        messages.error(request, f"Error processing decline: {str(e)}")
+
     return redirect('cp_requests')
 
 
