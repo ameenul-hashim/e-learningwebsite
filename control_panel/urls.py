@@ -11,4 +11,13 @@ urlpatterns = [
     path('control-panel/requests/decline/<int:pk>/', views.decline_request, name='cp_decline'),
     path('control-panel/videos/', views.manage_videos, name='cp_videos'),
     path('control-panel/videos/delete/<int:pk>/', views.delete_video, name='cp_delete_video'),
+    
+    # User Management
+    path('control-panel/users/', views.manage_users, name='cp_users'),
+    path('control-panel/users/delete/<int:pk>/', views.delete_user, name='cp_delete_user'),
+    path('control-panel/users/toggle/<int:pk>/', views.toggle_user_status, name='cp_toggle_user'),
+
+    # Category/Subject Management
+    path('control-panel/categories/', views.manage_categories, name='cp_categories'),
+    path('control-panel/categories/delete/<int:pk>/', views.delete_category, name='cp_delete_category'),
 ]

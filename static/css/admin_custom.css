@@ -1,18 +1,18 @@
 /* Advanced Admin Styling - Color & Structure Overhaul */
 :root {
-    --primary: #4f46e5;
-    --primary-bg: #eef2ff;
+    --primary: #00adb5;
+    --primary-bg: #e0f7fa;
     --success: #10b981;
     --success-bg: #ecfdf5;
     --danger: #ef4444;
     --danger-bg: #fef2f2;
     --warning: #f59e0b;
     --warning-bg: #fffbeb;
-    --info: #3b82f6;
-    --info-bg: #eff6ff;
-    --header-bg: #111827;
-    --text-dark: #1f2937;
-    --border-light: #e5e7eb;
+    --info: #00838f;
+    --info-bg: #e0f2f1;
+    --header-bg: #ffffff;
+    --text-dark: #212529;
+    --border-light: #dee2e6;
 }
 
 /* App-Specific Sidebar Colors */
@@ -40,8 +40,8 @@
 
 /* Dashboard Module Cards */
 .dashboard .module h2 {
-    background: #f9fafb !important;
-    color: var(--header-bg) !important;
+    background: #f8f9fa !important;
+    color: var(--primary) !important;
     font-size: 0.9rem !important;
     padding: 15px 20px !important;
     border-bottom: 2px solid var(--primary) !important;
@@ -158,5 +158,20 @@
 #container {
     max-width: 1400px;
     margin: 0 auto;
-    background: transparent;
+    background: #ffffff;
+}
+
+#header {
+    background: #ffffff;
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+}
+
+#header a:link, #header a:visited {
+    color: var(--primary);
+}
+
+div.breadcrumbs {
+    background: var(--primary-bg);
+    color: var(--text-dark);
 }

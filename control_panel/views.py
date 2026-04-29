@@ -126,3 +126,88 @@ def delete_video(request, pk):
     video.delete()
     messages.warning(request, "Video removed.")
     return redirect('cp_videos')
+
+
+@cp_admin_required
+def manage_users(request):
+    """
+    Manage users (list, create, edit).
+    """
+    users = User.objects.all().order_by('-date_joined')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        if username and email and password:
+            if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists():
+                messages.error(request, "User with this username or email already exists.")
+            else:
+                User.objects.create_user(username=username, email=email, password=password, is_verified=True)
+                messages.success(request, f"User '{username}' created successfully.")
+        return redirect('cp_users')
+
+    return render(request, 'control_panel/users.html', {'users': users})
+
+
+@cp_admin_required
+def delete_user(request, pk):
+    """
+    Delete a user.
+    """
+    user = get_object_or_404(User, pk=pk)
+    if user.is_superuser:
+        messages.error(request, "Cannot delete superuser.")
+    else:
+        user.delete()
+        messages.warning(request, "User deleted.")
+    return redirect('cp_users')
+
+
+@cp_admin_required
+def toggle_user_status(request, pk):
+    """
+    Block/Activate a user.
+    """
+    user = get_object_or_404(User, pk=pk)
+    if user.is_superuser:
+        messages.error(request, "Cannot modify superuser status.")
+    else:
+        user.is_blocked = not user.is_blocked
+        user.is_active = not user.is_blocked
+        user.save()
+        status = "blocked" if user.is_blocked else "activated"
+        messages.success(request, f"User {user.username} has been {status}.")
+    return redirect('cp_users')
+
+
+@cp_admin_required
+def manage_categories(request):
+    """
+    Manage categories/subjects.
+    """
+    categories = Category.objects.all().order_by('name')
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        
+        if name:
+            Category.objects.create(name=name, description=description)
+            messages.success(request, f"Subject '{name}' added successfully.")
+            return redirect('cp_categories')
+
+    return render(request, 'control_panel/categories.html', {'categories': categories})
+
+
+@cp_admin_required
+def delete_category(request, pk):
+    """
+    Delete a category/subject.
+    """
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    messages.warning(request, "Subject deleted.")
+    return redirect('cp_categories')
+
