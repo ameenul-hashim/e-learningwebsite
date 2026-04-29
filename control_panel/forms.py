@@ -2,11 +2,10 @@ from django import forms
 from accounts.models import User
 
 class AdminUserCreationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-slate-900 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all font-bold placeholder:text-slate-300',
-        'placeholder': '••••••••'
-    }))
-    
+    """
+    Simplified form for admin to create users. 
+    Passwords are now set by the student via a secure link.
+    """
     class Meta:
         model = User
         fields = ['username', 'email']
@@ -20,20 +19,3 @@ class AdminUserCreationForm(forms.ModelForm):
                 'readonly': 'readonly'
             }),
         }
-
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        if len(password) < 8:
-            raise forms.ValidationError("Password must be at least 8 characters long.")
-        
-        import re
-        if not re.search(r'[A-Z]', password):
-            raise forms.ValidationError("Password must include at least one uppercase letter.")
-        if not re.search(r'[a-z]', password):
-            raise forms.ValidationError("Password must include at least one lowercase letter.")
-        if not re.search(r'[0-9]', password):
-            raise forms.ValidationError("Password must include at least one number.")
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            raise forms.ValidationError("Password must include at least one special character.")
-            
-        return password

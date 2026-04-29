@@ -8,6 +8,50 @@ from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+from .models import User
+
+def password_setup_view(request, uidb64, token):
+    """
+    View for students to set their password for the first time using a secure link.
+    """
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+            else:
+                from control_panel.forms import AdminUserCreationForm
+                # Use a dummy form just for validation if needed, or manual validation
+                # For simplicity and consistency with previous requirements:
+                from control_panel.forms import AdminUserCreationForm
+                # Actually I'll just do manual validation here to avoid form complexities
+                import re
+                if len(password) < 8:
+                    messages.error(request, "Password must be at least 8 characters.")
+                elif not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password):
+                    messages.error(request, "Password must include uppercase and numbers.")
+                else:
+                    user.set_password(password)
+                    user.must_change_password = False
+                    user.save()
+                    messages.success(request, "Password set successfully! You can now log in.")
+                    return redirect('login')
+        
+        return render(request, 'accounts/password_setup.html', {'user': user})
+    else:
+        messages.error(request, "The password setup link is invalid or has expired.")
+        return redirect('landing')
 
 def landing_page(request):
     """

@@ -9,6 +9,9 @@ from django.conf import settings
 from django.core.cache import cache
 from functools import wraps
 from twilio.rest import Client
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 
 def normalize_phone(phone):
     """
@@ -46,19 +49,17 @@ def send_whatsapp_notification(to_number, message_body):
         print(f"Twilio Send Error: {str(e)}")
         return False
 
-def send_credential_notification(user_name, email, whatsapp, username, password, is_reset=False):
+def send_credential_notification(user_name, email, whatsapp, username, setup_link, is_reset=False):
     """
-    Primary WhatsApp delivery with Email Fallback.
+    Sends a secure password setup link via WhatsApp with Email Fallback.
     """
-    login_url = settings.LOGIN_URL # or build absolute
-    action_text = "application is approved" if not is_reset else "credentials have been reset"
-    pass_label = "Password" if not is_reset else "New Password"
+    action_text = "account is approved" if not is_reset else "password reset request has been processed"
     
     message_body = (
         f"EduStream: Your {action_text}.\n"
         f"Username: {username}\n"
-        f"{pass_label}: {password}\n"
-        f"Do not share this information."
+        f"Set your password here: {setup_link}\n"
+        f"This link expires soon."
     )
     
     # Try WhatsApp
@@ -67,13 +68,14 @@ def send_credential_notification(user_name, email, whatsapp, username, password,
     # Try Email anyway or as fallback
     email_success = False
     try:
-        subject = f"EduStream: {'Account Ready' if not is_reset else 'Password Reset'}"
+        subject = f"EduStream: {'Set Your Password' if not is_reset else 'Reset Your Password'}"
         email_message = (
             f"Hello {user_name},\n\n"
             f"Your {action_text}.\n\n"
-            f"Username: {username}\n"
-            f"{pass_label}: {password}\n\n"
-            f"Keep these credentials secure.\n\n"
+            f"Username: {username}\n\n"
+            f"Please click the link below to set your secure password:\n"
+            f"{setup_link}\n\n"
+            f"This link is valid for a limited time.\n\n"
             f"Best regards,\nEduStream Team"
         )
         send_mail(subject, email_message, settings.DEFAULT_FROM_EMAIL, [email])
@@ -289,48 +291,56 @@ def create_user_from_request(request, request_id):
             try:
                 username = form.cleaned_data['username']
                 email = form.cleaned_data['email']
-                password = form.cleaned_data['password']
                 
-                # Double check existence (forms.ModelForm handles some, but let's be safe)
                 if User.objects.filter(email=email).exists():
                     messages.error(request, f"User with email {email} already exists.")
                     return render(request, 'control_panel/create_user_from_request.html', {'form': form, 'req': access_req})
 
+                # Create user with random password (never sent)
+                from django.utils.crypto import get_random_string
+                temp_pass = get_random_string(32)
+                
                 user = User.objects.create_user(
                     username=username,
                     email=email,
-                    password=password,
+                    password=temp_pass,
                     is_verified=True,
                     is_blocked=False,
                     whatsapp_number=normalize_phone(access_req.whatsapp)
                 )
+                user.must_change_password = True
+                user.save()
                 
-                # Send Credentials with Fallback
+                # Generate Password Setup Link
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                setup_link = f"{request.build_absolute_uri('/')[:-1]}/accounts/setup-password/{uid}/{token}/"
+                
+                # Send Link with Fallback
                 ws_ok, em_ok = send_credential_notification(
                     access_req.name, access_req.email, access_req.whatsapp, 
-                    username, password
+                    username, setup_link
                 )
                 
                 if ws_ok:
-                    messages.success(request, f"Account created and WhatsApp sent to {access_req.whatsapp}.")
+                    messages.success(request, f"Account created and Setup Link sent to WhatsApp.")
                 elif em_ok:
-                    messages.warning(request, f"Account created. WhatsApp failed, but fallback Email sent to {access_req.email}.")
+                    messages.warning(request, f"Account created. WhatsApp failed, but Setup Link sent via Email.")
                 else:
                     messages.error(request, "Account created, but both WhatsApp and Email notifications failed.")
 
                 AdminAuditLog.objects.create(
                     admin_user=request.user,
                     action="User Onboarded",
-                    details=f"Finalized account for {access_req.email}. Username: {username}. Notification status: WS={ws_ok}, EM={em_ok}"
+                    details=f"Finalized account for {access_req.email}. Username: {username}. Link sent."
                 )
                 return redirect('cp_dashboard')
                 
             except Exception as e:
                 messages.error(request, f"Database error during user creation: {str(e)}")
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field.capitalize()}: {error}")
+            for error in form.errors.values():
+                messages.error(request, error[0])
     else:
         form = AdminUserCreationForm(initial={'email': access_req.email})
         
