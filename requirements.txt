@@ -1,7 +1,9 @@
-Django>=4.0
+Django>=4.2
 gunicorn
-psycopg2-binary==2.9.9
+psycopg2-binary
 whitenoise[brotli]
 brotli
 python-dotenv
 dj-database-url
+Pillow
+django-cleanup
