@@ -1,24 +1,30 @@
 import logging
+import threading
 from django.conf import settings
 
 logger = logging.getLogger('production.utils')
 
 def safe_task_delay(task, *args, **kwargs):
     """
-    Safely executes a Celery task. 
-    If Celery is not configured or fails, it can fall back to sync execution.
+    Safely executes a task using threading for background processing.
     """
     try:
-        if getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', True):
-            # Run synchronously in dev or if Redis is missing
-            return task(*args, **kwargs)
-        else:
-            # Run asynchronously
-            return task.delay(*args, **kwargs)
+        # Instead of Celery, we use a simple thread for now
+        # This keeps the system lightweight and free-hosting compatible
+        def run_task():
+            try:
+                task(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"Async Thread Failure for {task.__name__}: {str(e)}")
+
+        thread = threading.Thread(target=run_task)
+        thread.daemon = True
+        thread.start()
+        return True
     except Exception as e:
-        logger.error(f"Task Execution Failed for {task.__name__}: {str(e)}. Falling back to sync.")
+        logger.error(f"Failed to start thread for {task.__name__}: {str(e)}. Falling back to sync.")
         try:
             return task(*args, **kwargs)
         except Exception as sync_e:
-            logger.critical(f"Critical Failure: Sync fallback also failed for {task.__name__}: {str(e)}")
+            logger.critical(f"Critical Failure: Sync fallback also failed for {task.__name__}: {str(sync_e)}")
             return None
