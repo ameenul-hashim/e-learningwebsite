@@ -8,7 +8,19 @@ from rest_framework.routers import DefaultRouter
 from videos.api_views import VideoViewSet, CategoryViewSet
 
 def health_check(request):
-    return JsonResponse({"status": "healthy"}, status=200)
+    from django.db import connections
+    from django.db.utils import OperationalError
+    db_conn = connections['default']
+    try:
+        db_conn.cursor()
+        db_status = "connected"
+    except OperationalError:
+        db_status = "unavailable"
+    
+    return JsonResponse({
+        "status": "healthy" if db_status == "connected" else "partially_degraded",
+        "database": db_status
+    }, status=200 if db_status == "connected" else 503)
 
 router = DefaultRouter()
 router.register(r'videos', VideoViewSet)
