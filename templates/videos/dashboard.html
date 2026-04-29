@@ -1,33 +1,16 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="space-y-12">
-    <div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tight">Learning Hub</h1>
-        <p class="text-slate-500 font-medium mt-1">Explore your enrolled subjects and lessons</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {% for subject in subjects %}
-        <a href="{% url 'subject_detail' subject.id %}" class="group bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-100 transition-all duration-300 transform hover:-translate-y-2">
-            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-8 group-hover:bg-blue-600 group-hover:text-white transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-            </div>
-            <h2 class="text-2xl font-black text-slate-900 mb-2">{{ subject.name }}</h2>
-            <p class="text-slate-500 text-sm font-medium line-clamp-2 mb-6">{{ subject.description|default:"No description provided." }}</p>
-            <div class="flex items-center text-blue-600 font-bold text-xs uppercase tracking-widest">
-                Start Learning 
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-            </div>
-        </a>
-        {% empty %}
-        <div class="col-span-full py-20 text-center">
-            <p class="text-slate-400 font-bold uppercase tracking-widest">No subjects available yet.</p>
+<h1 class="text-4xl font-black mb-12 tracking-tight">Your Courses</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for subject in subjects %}
+    <a href="{% url 'subject_detail' subject.id %}" class="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl transition transform hover:-translate-y-1 block group">
+        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
         </div>
-        {% endfor %}
-    </div>
+        <h2 class="text-2xl font-black mb-2">{{ subject.name }}</h2>
+        <p class="text-slate-500 text-sm font-medium mb-6">{{ subject.description|truncatechars:80 }}</p>
+        <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">Enter Course →</span>
+    </a>
+    {% endfor %}
 </div>
 {% endblock %}

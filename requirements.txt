@@ -1,7 +1,8 @@
-Django>=4.2
+﻿Django
 gunicorn
 psycopg2-binary
 whitenoise[brotli]
 brotli
 python-dotenv
 dj-database-url
+Pillow

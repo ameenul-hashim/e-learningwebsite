@@ -1,30 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="space-y-12">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-            <a href="{% url 'dashboard' %}" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition block mb-4">← Return to Dashboard</a>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tight">{{ subject.name }}</h1>
-            <p class="text-slate-500 font-medium mt-1">{{ subject.videos.count }} Lessons included</p>
+<div class="mb-12">
+    <a href="{% url 'dashboard' %}" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition">← Back to Dashboard</a>
+    <h1 class="text-4xl font-black mt-4 tracking-tight">{{ subject.name }}</h1>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+    {% for video in subject.videos.all %}
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm">
+        <div class="aspect-video bg-black">
+            <iframe class="w-full h-full" src="{{ video.embed_url }}" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="p-8">
+            <span class="text-[10px] font-black uppercase tracking-widest text-blue-500">Lesson {{ forloop.counter }}</span>
+            <h3 class="text-xl font-bold mt-1">{{ video.title }}</h3>
         </div>
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {% for video in subject.videos.all %}
-        <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden group">
-            <div class="aspect-video bg-slate-900">
-                <iframe src="{{ video.embed_url }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>
-            <div class="p-8">
-                <div class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">Lesson {{ forloop.counter }}</div>
-                <h3 class="text-xl font-bold text-slate-900">{{ video.title }}</h3>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-span-full py-20 text-center bg-white rounded-[2.5rem] border border-slate-100 border-dashed">
-            <p class="text-slate-400 font-bold uppercase tracking-widest">Lessons are coming soon.</p>
-        </div>
-        {% endfor %}
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}

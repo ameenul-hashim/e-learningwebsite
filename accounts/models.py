@@ -12,8 +12,4 @@ class User(AbstractUser):
     proof_file = models.FileField(upload_to='proofs/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
-    # We use is_active to control login permission
-    # On signup, is_active=False. Admin approval sets it to True.
-    
-    def __str__(self):
-        return self.username
+    def __str__(self): return self.username

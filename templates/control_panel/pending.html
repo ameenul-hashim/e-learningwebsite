@@ -1,53 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="space-y-12">
-    <div>
-        <a href="{% url 'admin_dashboard' %}" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition block mb-4">← Return to Control Panel</a>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tight">Pending Verifications</h1>
-        <p class="text-slate-500 font-medium mt-1">Review student applications for platform access</p>
-    </div>
-
-    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b border-slate-100">
-                    <tr>
-                        <th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</th>
-                        <th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
-                        <th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Proof</th>
-                        <th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Decision</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    {% for req in reqs %}
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="px-10 py-8">
-                            <div class="font-bold text-slate-900">{{ req.first_name }}</div>
-                            <div class="text-xs text-slate-400 font-medium">@{{ req.username }} · {{ req.email }}</div>
-                        </td>
-                        <td class="px-10 py-8 text-sm font-bold text-slate-600">{{ req.contact_number|default:"N/A" }}</td>
-                        <td class="px-10 py-8 text-center">
-                            {% if req.proof_file %}
-                            <a href="{{ req.proof_file.url }}" target="_blank" class="inline-flex items-center text-xs font-black text-blue-600 uppercase tracking-widest hover:underline">View Document</a>
-                            {% else %}
-                            <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">No Proof</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-10 py-8 text-right space-x-2">
-                            <a href="{% url 'approve_user' req.id %}" class="bg-green-50 text-green-600 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 hover:text-white transition">Approve</a>
-                            <a href="{% url 'decline_user' req.id %}" class="bg-red-50 text-red-600 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition">Decline</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="px-10 py-20 text-center">
-                            <p class="text-slate-400 font-bold uppercase tracking-widest">All applications are processed.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+<h1 class="text-4xl font-black mb-12 tracking-tight">Pending Approval</h1>
+<div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-slate-50 border-b">
+            <tr><th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</th><th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Proof</th><th class="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th></tr>
+        </thead>
+        <tbody class="divide-y">
+            {% for r in reqs %}
+            <tr>
+                <td class="px-10 py-8"><div class="font-bold">{{ r.first_name }}</div><div class="text-xs text-slate-400">@{{ r.username }}</div></td>
+                <td class="px-10 py-8 text-center">{% if r.proof_file %}<a href="{{ r.proof_file.url }}" target="_blank" class="text-xs font-black text-blue-600 underline uppercase tracking-widest">View</a>{% endif %}</td>
+                <td class="px-10 py-8 text-right space-x-2">
+                    <a href="{% url 'approve_user' r.id %}" class="bg-green-50 text-green-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Approve</a>
+                    <a href="{% url 'decline_user' r.id %}" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Decline</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}
