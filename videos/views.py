@@ -48,6 +48,14 @@ def watch_video(request, video_id):
     # Log video access for tracking
     DownloadLog.objects.create(user=request.user, video=video)
     
+    # Advanced activity tracking
+    from .models import VideoWatchLog
+    VideoWatchLog.objects.create(
+        user=request.user, 
+        video=video,
+        ip_address=request.META.get('REMOTE_ADDR')
+    )
+    
     return render(request, 'videos/watch.html', {'video': video})
 
 @login_required

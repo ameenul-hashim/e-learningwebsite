@@ -47,6 +47,9 @@ urlpatterns = [
     path('', include('videos.urls')),
     path('', include('control_panel.urls')),
     
+    # Password Reset URLs
+    path('accounts/', include('django.contrib.auth.urls')),
+    
     # API Endpoints
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

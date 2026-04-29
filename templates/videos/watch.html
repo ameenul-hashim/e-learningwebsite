@@ -2,6 +2,13 @@
 
 {% block title %}Watching: {{ video.title }} - EduStream{% endblock %}
 
+{% block extra_head %}
+<script>
+    // Disable right-click on the video page
+    document.addEventListener('contextmenu', event => event.preventDefault());
+</script>
+{% endblock %}
+
 {% block content %}
 <main class="max-w-7xl mx-auto px-6 py-12">
     <!-- Breadcrumbs -->

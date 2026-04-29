@@ -101,7 +101,7 @@ def cp_admin_required(view_func):
 @cp_admin_required
 def dashboard(request):
     """
-    Main admin dashboard overview.
+    Main admin dashboard overview with audit logs.
     """
     stats = {
         'total_users': User.objects.count(),
@@ -109,18 +109,28 @@ def dashboard(request):
         'total_videos': Video.objects.count(),
         'total_categories': Category.objects.count(),
     }
-    return render(request, 'control_panel/dashboard.html', {'stats': stats})
+    recent_logs = AdminAuditLog.objects.select_related('admin_user').all()[:10]
+    return render(request, 'control_panel/dashboard.html', {
+        'stats': stats,
+        'recent_logs': recent_logs
+    })
 
 
 @cp_admin_required
 def manage_requests(request):
     """
-    Handle user access requests.
+    Handle user access requests with pagination.
     """
-    pending = AccessRequest.objects.filter(status='pending').order_by('-created_at')
+    from django.core.paginator import Paginator
+    pending_list = AccessRequest.objects.filter(status='pending').order_by('-created_at')
+    
+    paginator = Paginator(pending_list, 10) # 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     history = AccessRequest.objects.exclude(status='pending').order_by('-created_at')[:20]
     return render(request, 'control_panel/requests.html', {
-        'pending': pending,
+        'pending': page_obj,
         'history': history
     })
 
@@ -396,9 +406,16 @@ def delete_video(request, pk):
 @cp_admin_required
 def manage_users(request):
     """
-    Manage users (list, create, edit). Sends credentials email on creation.
+    Manage users (list, create, edit) with pagination.
     """
-    users = User.objects.all().order_by('-date_joined')
+    from django.core.paginator import Paginator
+    
+    user_list = User.objects.all().order_by('-date_joined')
+    paginator = Paginator(user_list, 15) # 15 per page
+    
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     prefill_email = request.session.pop('prefill_email', '')
     
     if request.method == 'POST':
@@ -418,13 +435,6 @@ def manage_users(request):
                         is_verified=True
                     )
                     
-                    # Step 2 Email: Credentials
-                    subject = 'EduStream: Your Login Credentials'
-                    login_url = request.build_absolute_uri("/login/")
-                    message = f'Hello,\n\nYour EduStream account is ready.\n\nUsername: {username}\nPassword: {password}\n\nYou can log in here: {login_url}\n\nPlease keep these credentials secure.\n\nBest regards,\nEduStream Team'
-                    
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
-                    
                     # Log admin action
                     AdminAuditLog.objects.create(
                         admin_user=request.user,
@@ -432,16 +442,19 @@ def manage_users(request):
                         details=f"Manually created user: {username} ({email})"
                     )
                     
-                    messages.success(request, f"User '{username}' created and credentials sent to {email}.")
+                    messages.success(request, f"User '{username}' created. Please use the 'Resend Credentials' tool to send details via WhatsApp if needed.")
 
                     return redirect('cp_users')
                 except Exception as e:
-                    messages.error(request, f"Error creating user or sending email: {str(e)}")
+                    messages.error(request, f"Error creating user: {str(e)}")
         else:
             messages.error(request, "All fields are required.")
         return redirect('cp_users')
 
-    return render(request, 'control_panel/users.html', {'users': users, 'prefill_email': prefill_email})
+    return render(request, 'control_panel/users.html', {
+        'users': page_obj, 
+        'prefill_email': prefill_email
+    })
 
 
 
