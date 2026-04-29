@@ -11,3 +11,4 @@ django-ratelimit
 django-redis
 redis
 celery
+twilio

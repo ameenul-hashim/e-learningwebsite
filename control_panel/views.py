@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,6 +8,30 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.core.cache import cache
 from functools import wraps
+from twilio.rest import Client
+
+def send_whatsapp_notification(to_number, message_body):
+    """
+    Helper to send WhatsApp messages via Twilio.
+    """
+    try:
+        # Prepend 'whatsapp:' if not present
+        if not to_number.startswith('whatsapp:'):
+            to_number = f"whatsapp:{to_number}"
+            
+        client = Client(
+            os.getenv('TWILIO_ACCOUNT_SID'), 
+            os.getenv('TWILIO_AUTH_TOKEN')
+        )
+        message = client.messages.create(
+            from_=os.getenv('TWILIO_WHATSAPP_NUMBER'),
+            body=message_body,
+            to=to_number
+        )
+        return True
+    except Exception as e:
+        print(f"Twilio Error: {str(e)}")
+        return False
 
 
 
@@ -100,19 +125,16 @@ def decline_request(request, pk):
             details=f"Declined request from {access_req.email}"
         )
         
-        # Send rejection email
-        subject = 'EduStream Access Request Update'
-        message = (
-            f"Hello {access_req.name},\n\n"
-            "Your verification failed. Your proof is not sufficient for access.\n\n"
-            "Best regards,\nEduStream Team"
+        # Send WhatsApp rejection message
+        message_body = (
+            f"Dear {access_req.name}, your access to EduStream is declined. "
+            "Your submitted proof is not sufficient. Please upload a valid document."
         )
         
-        try:
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
-            messages.info(request, f"Request from {access_req.name} declined and email sent.")
-        except Exception as e:
-            messages.warning(request, f"Request declined, but notification email failed: {str(e)}")
+        if send_whatsapp_notification(access_req.whatsapp, message_body):
+            messages.info(request, f"Request from {access_req.name} declined and WhatsApp sent.")
+        else:
+            messages.warning(request, f"Request declined, but WhatsApp notification failed.")
             
     except Exception as e:
         messages.error(request, f"Error processing decline: {str(e)}")
@@ -152,24 +174,20 @@ def create_user_from_request(request, request_id):
                     is_verified=True
                 )
                 
-                # Send credentials email
-                subject = 'EduStream: Your Account is Ready'
+                # Send WhatsApp credentials message
                 login_url = request.build_absolute_uri("/login/")
-                message = (
-                    f"Hello {access_req.name},\n\n"
-                    "Your EduStream account has been created successfully.\n\n"
-                    f"Login Credentials:\n"
+                message_body = (
+                    f"EduStream: Your application is approved.\n"
                     f"Username: {username}\n"
-                    f"Password: {password}\n\n"
-                    f"Login here: {login_url}\n\n"
-                    "Best regards,\nEduStream Team"
+                    f"Password: {password}\n"
+                    f"Use these credentials to login: {login_url}\n"
+                    f"Do not share this information."
                 )
                 
-                try:
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
-                    messages.success(request, f"Account for {username} created and credentials sent.")
-                except Exception as e:
-                    messages.warning(request, f"Account created, but email failed: {str(e)}")
+                if send_whatsapp_notification(access_req.whatsapp, message_body):
+                    messages.success(request, f"Account for {username} created and WhatsApp sent.")
+                else:
+                    messages.warning(request, f"Account created, but WhatsApp failed to send.")
 
                 AdminAuditLog.objects.create(
                     admin_user=request.user,
