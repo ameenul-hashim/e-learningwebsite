@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt',
-    'django_ratelimit',
     # 'storages',
     
     # Local apps

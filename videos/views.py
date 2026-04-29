@@ -5,7 +5,7 @@ from django.views.decorators.cache import cache_page
 from .models import Video, DownloadLog
 from .services.video_service import VideoService
 from accounts.services.user_service import UserService
-from ratelimit.decorators import ratelimit
+from django_ratelimit.decorators import ratelimit
 
 @login_required
 @cache_page(60 * 15)
