@@ -3,11 +3,4 @@ gunicorn
 whitenoise[brotli]
 python-dotenv
 dj-database-url
-djangorestframework
-djangorestframework-simplejwt
-django-ratelimit
-django-redis
-redis
-twilio
 psycopg2-binary
-psycopg[binary]

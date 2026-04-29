@@ -4,8 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 
-from rest_framework.routers import DefaultRouter
-from videos.api_views import VideoViewSet, CategoryViewSet
+# from rest_framework.routers import DefaultRouter
+# from videos.api_views import VideoViewSet, CategoryViewSet
 
 def health_check(request):
     from django.db import connections
@@ -36,9 +36,9 @@ def health_check(request):
         "cache": cache_status
     }, status=status_code)
 
-router = DefaultRouter()
-router.register(r'videos', VideoViewSet)
-router.register(r'categories', CategoryViewSet)
+# router = DefaultRouter()
+# router.register(r'videos', VideoViewSet)
+# router.register(r'categories', CategoryViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -51,8 +51,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     
     # API Endpoints
-    path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    # path('api/', include(router.urls)),
+    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
 
 if settings.DEBUG:
