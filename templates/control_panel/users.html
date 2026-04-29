@@ -67,6 +67,9 @@
                         <td class="p-6 text-right">
                             <div class="flex justify-end gap-2">
                                 {% if not user.is_superuser %}
+                                <a href="{% url 'cp_resend_credentials' user.pk %}" onclick="return confirm('Reset and resend credentials to {{ user.username }}?');" class="p-2 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-all" title="Resend & Reset Credentials">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                </a>
                                 <a href="{% url 'cp_toggle_user' user.pk %}" class="p-2 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-all" title="{% if user.is_blocked %}Unblock{% else %}Block{% endif %}">
                                     {% if user.is_blocked %}
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>

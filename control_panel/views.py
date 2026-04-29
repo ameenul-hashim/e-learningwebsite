@@ -10,27 +10,40 @@ from django.core.cache import cache
 from functools import wraps
 from twilio.rest import Client
 
+def normalize_phone(phone):
+    """
+    Ensure phone number has '+' and country code. Defaults to +91 if missing.
+    """
+    clean_phone = "".join(filter(str.isdigit, str(phone)))
+    if not clean_phone.startswith('91') and len(clean_phone) == 10:
+        clean_phone = f"91{clean_phone}"
+    if not clean_phone.startswith('+'):
+        clean_phone = f"+{clean_phone}"
+    return clean_phone
+
 def send_whatsapp_notification(to_number, message_body):
     """
-    Helper to send WhatsApp messages via Twilio.
+    Helper to send WhatsApp messages via Twilio with validation.
     """
     try:
-        # Prepend 'whatsapp:' if not present
-        if not to_number.startswith('whatsapp:'):
-            to_number = f"whatsapp:{to_number}"
+        normalized_to = normalize_phone(to_number)
+        
+        # Twilio sandbox requires the number to be prefixed with 'whatsapp:'
+        formatted_to = f"whatsapp:{normalized_to}"
             
         client = Client(
             os.getenv('TWILIO_ACCOUNT_SID'), 
             os.getenv('TWILIO_AUTH_TOKEN')
         )
+        
         message = client.messages.create(
             from_=os.getenv('TWILIO_WHATSAPP_NUMBER'),
             body=message_body,
-            to=to_number
+            to=formatted_to
         )
         return True
     except Exception as e:
-        print(f"Twilio Error: {str(e)}")
+        print(f"Twilio Send Error: {str(e)}")
         return False
 
 
@@ -171,7 +184,8 @@ def create_user_from_request(request, request_id):
                     username=username,
                     email=email,
                     password=password,
-                    is_verified=True
+                    is_verified=True,
+                    whatsapp_number=normalize_phone(access_req.whatsapp)
                 )
                 
                 # Send WhatsApp credentials message
@@ -209,6 +223,49 @@ def create_user_from_request(request, request_id):
         'form': form,
         'req': access_req
     })
+
+
+@cp_admin_required
+def resend_credentials(request, pk):
+    """
+    Reset password and resend credentials via WhatsApp.
+    """
+    from django.utils.crypto import get_random_string
+    user = get_object_or_404(User, pk=pk)
+    
+    if not user.whatsapp_number:
+        messages.error(request, f"User {user.username} does not have a WhatsApp number on file.")
+        return redirect('cp_users')
+
+    try:
+        # Generate new password
+        new_password = get_random_string(12)
+        user.set_password(new_password)
+        user.save()
+        
+        login_url = request.build_absolute_uri("/login/")
+        message_body = (
+            f"EduStream: Your credentials have been reset.\n"
+            f"Username: {user.username}\n"
+            f"New Password: {new_password}\n"
+            f"Login here: {login_url}\n"
+            f"Keep this secure."
+        )
+        
+        if send_whatsapp_notification(user.whatsapp_number, message_body):
+            AdminAuditLog.objects.create(
+                admin_user=request.user,
+                action="Resent Credentials",
+                details=f"Reset and resent credentials to {user.username}"
+            )
+            messages.success(request, f"New credentials sent to {user.username} via WhatsApp.")
+        else:
+            messages.error(request, "Failed to send WhatsApp message. Please check Twilio logs.")
+            
+    except Exception as e:
+        messages.error(request, f"Error resetting credentials: {str(e)}")
+
+    return redirect('cp_users')
 
 
 @cp_admin_required
