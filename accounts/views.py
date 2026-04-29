@@ -12,9 +12,14 @@ def landing_page(request):
     if request.method == 'POST':
         form = AccessRequestForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Your request has been submitted successfully. We will contact you soon.")
-            return redirect('landing')
+            try:
+                form.save()
+                messages.success(request, "Your request has been submitted successfully. We will contact you soon.")
+                return redirect('landing')
+            except Exception as e:
+                messages.error(request, f"An error occurred while saving your proof: {str(e)}. Please try again or contact support.")
+        else:
+            messages.error(request, "Please correct the errors in the form before submitting.")
     else:
         form = AccessRequestForm()
     return render(request, 'accounts/landing.html', {'form': form})
@@ -35,5 +40,9 @@ class RestrictedLoginView(LoginView):
             messages.error(self.request, "Access denied: Your account is blocked.")
             return self.form_invalid(form)
         
-        auth_login(self.request, user)
-        return redirect(self.get_success_url())
+        try:
+            auth_login(self.request, user)
+            return redirect(self.get_success_url())
+        except Exception as e:
+            messages.error(self.request, f"Login failed due to a server error: {str(e)}.")
+            return self.form_invalid(form)

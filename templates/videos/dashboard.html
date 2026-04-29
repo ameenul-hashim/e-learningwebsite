@@ -38,33 +38,31 @@
     </div>
     {% endif %}
 
-    <!-- Categorized Rows -->
-    {% for category in categories %}
+    <!-- Subjects / Categories -->
     <div class="category-section mb-5">
-        <h2 class="category-title">{{ category.name }}</h2>
-        <div class="video-row">
-            {% for video in category.videos.all %}
-            <div class="video-card-ott">
-                <a href="{% url 'watch_video' video.id %}" class="text-decoration-none">
-                    <div class="card-img-wrapper">
-                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" loading="lazy">
-                        <div class="card-overlay">
-                            <i class="bi bi-play-fill"></i>
+        <h2 class="category-title mb-4">Explore Subjects</h2>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-md-4 col-sm-6">
+                <a href="{% url 'subject_videos' category.id %}" class="text-decoration-none">
+                    <div class="subject-card">
+                        <div class="subject-card-content">
+                            <h3 class="subject-title">{{ category.name }}</h3>
+                            <p class="subject-count">{{ category.videos.count }} Videos</p>
+                        </div>
+                        <div class="subject-card-overlay">
+                            <i class="bi bi-folder2-open"></i>
                         </div>
                     </div>
-                    <div class="card-info">
-                        <h3 class="video-title">{{ video.title }}</h3>
-                    </div>
                 </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <h3 class="text-gray">No subjects found. Add some in the Control Panel!</h3>
             </div>
             {% endfor %}
         </div>
     </div>
-    {% empty %}
-    <div class="text-center py-5">
-        <h3 class="text-gray">No categories found. Add some in the Control Panel!</h3>
-    </div>
-    {% endfor %}
 </div>
 {% endblock %}
 
@@ -145,6 +143,54 @@
         color: white;
     }
     .search-group .form-control::placeholder { color: var(--text-muted); }
+
+    /* Subject Card Styles */
+    .subject-card {
+        background: linear-gradient(135deg, rgba(0,173,181,0.1), rgba(0,131,143,0.2));
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 30px 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 173, 181, 0.2);
+        border-color: var(--accent-primary);
+        background: linear-gradient(135deg, rgba(0,173,181,0.2), rgba(0,131,143,0.3));
+    }
+    .subject-card-content {
+        z-index: 2;
+    }
+    .subject-title {
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 5px;
+    }
+    .subject-count {
+        color: var(--accent-warm);
+        font-size: 0.9rem;
+        margin: 0;
+        font-weight: 500;
+    }
+    .subject-card-overlay {
+        font-size: 3.5rem;
+        color: rgba(255,255,255,0.05);
+        position: absolute;
+        right: 15px;
+        bottom: -10px;
+        transition: all 0.4s ease;
+    }
+    .subject-card:hover .subject-card-overlay {
+        color: rgba(0, 229, 255, 0.15);
+        transform: scale(1.1) rotate(-5deg);
+    }
 
     @media (max-width: 768px) {
         .ott-container { padding-top: 80px; }

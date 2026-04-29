@@ -44,3 +44,22 @@ def watch_video(request, video_id):
     VideoService.record_watch_event(request.user, video)
     
     return render(request, 'videos/watch.html', {'video': video})
+
+@login_required
+def subject_videos(request, category_id):
+    """
+    Shows videos within a specific subject/category.
+    """
+    is_allowed, message = UserService.validate_user_access(request.user)
+    if not is_allowed:
+        raise PermissionDenied(message)
+    
+    from .models import Category
+    category = get_object_or_404(Category, id=category_id)
+    videos = Video.objects.filter(category=category).order_by('-created_at')
+    
+    return render(request, 'videos/subject_videos.html', {
+        'category': category,
+        'videos': videos
+    })
+

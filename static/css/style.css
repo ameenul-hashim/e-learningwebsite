@@ -6,19 +6,19 @@
 
 :root {
     /* Gradient Palette */
-    --grad-start: #0f0c29;
-    --grad-mid: #302b63;
-    --grad-end: #24243e;
-    --accent-primary: #667eea;
-    --accent-secondary: #764ba2;
-    --accent-glow: #a855f7;
-    --accent-warm: #f093fb;
-    --surface-card: rgba(255, 255, 255, 0.06);
-    --surface-card-hover: rgba(255, 255, 255, 0.1);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --grad-start: #00222a;
+    --grad-mid: #005f73;
+    --grad-end: #0a9396;
+    --accent-primary: #00adb5;
+    --accent-secondary: #00838f;
+    --accent-glow: #00e5ff;
+    --accent-warm: #48cae4;
+    --surface-card: rgba(255, 255, 255, 0.08);
+    --surface-card-hover: rgba(255, 255, 255, 0.15);
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    --text-primary: #ffffff;
+    --text-secondary: #e0f7fa;
+    --text-muted: #b2ebf2;
     --danger: #ef4444;
     --success: #22c55e;
 }
