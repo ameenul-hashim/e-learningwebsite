@@ -1,14 +1,13 @@
 django
 gunicorn
-whitenoise
+whitenoise[brotli]
 python-dotenv
-django-dotenv
-psycopg[binary]
 dj-database-url
 djangorestframework
 djangorestframework-simplejwt
 django-ratelimit
 django-redis
 redis
-celery
 twilio
+psycopg2-binary
+psycopg[binary]
