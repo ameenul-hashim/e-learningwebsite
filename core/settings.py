@@ -107,5 +107,5 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Security settings
-CSRF_TRUSTED_ORIGINS = ['https://*.render.com']
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 X_FRAME_OPTIONS = 'SAMEORIGIN' # Allow iframe embedding for our own videos if needed
