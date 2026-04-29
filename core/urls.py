@@ -2,13 +2,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
 
 urlpatterns = [
     path('django-admin/', admin.site.urls), # Keep default admin just in case
     path('', include('accounts.urls')),
     path('dashboard/', include('videos.urls')),
     path('control-panel/', include('control_panel.urls')),
-    path('health/', lambda r: __import__('django.http', fromlist=['HttpResponse']).HttpResponse('OK'), name='health'),
+    path('health/', lambda r: HttpResponse('OK'), name='health'),
 ]
 
 if settings.DEBUG:
