@@ -43,7 +43,9 @@ def send_setup_email(username, email, password, is_reset=False):
                 print(f"Async Email Error: {str(e)}")
 
         import threading
-        threading.Thread(target=send_async).start()
+        thread = threading.Thread(target=send_async)
+        thread.daemon = True
+        thread.start()
         return True
     except Exception as e:
         print(f"Email Setup Error: {str(e)}")
@@ -71,7 +73,9 @@ def send_rejection_email(email):
                 print(f"Async Email Rejection Error: {str(e)}")
         
         import threading
-        threading.Thread(target=send_async).start()
+        thread = threading.Thread(target=send_async)
+        thread.daemon = True
+        thread.start()
         return True
     except Exception as e:
         print(f"Email Rejection Setup Error: {str(e)}")
