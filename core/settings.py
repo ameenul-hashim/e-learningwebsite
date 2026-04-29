@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     
     # Third party apps
     'rest_framework',
+    'rest_framework_simplejwt',
+    'django_ratelimit',
     # 'storages',
     
     # Local apps
@@ -116,26 +118,28 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
-# Caching Strategy (Production Resilient)
+# Caching Strategy (Redis Optimized)
 REDIS_URL = os.getenv('REDIS_URL')
-if REDIS_URL and not DEBUG:
-    try:
-        CACHES = {
-            'default': {
-                'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-                'LOCATION': REDIS_URL,
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
             }
         }
-    except Exception:
-        # Fallback to FileBasedCache if Redis fails to initialize
-        CACHES = {
-            'default': {
-                'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-                'LOCATION': BASE_DIR / 'django_cache',
-                'TIMEOUT': 300,
-            }
-        }
+    }
 else:
     CACHES = {
         'default': {
@@ -144,6 +148,15 @@ else:
             'TIMEOUT': 300,
         }
     }
+
+# Email Configuration (Production SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = f"EduStream <{EMAIL_HOST_USER}>"
 
 # Celery Strategy (Fail-Safe)
 CELERY_BROKER_URL = os.getenv('REDIS_URL')
@@ -184,7 +197,12 @@ LOGGING = {
 }
 
 # Django REST Framework Configuration (Performance Optimized)
+from datetime import timedelta
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
@@ -198,6 +216,12 @@ REST_FRAMEWORK = {
         'anon': '30/minute',
         'user': '100/minute'
     }
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # Password validation

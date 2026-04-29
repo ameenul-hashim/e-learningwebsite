@@ -3,7 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.models import AccessRequest, User
 from videos.models import Video, Category
+from django.core.mail import send_mail
+from django.conf import settings
 from functools import wraps
+
 
 
 def cp_admin_required(view_func):
@@ -70,8 +73,16 @@ def approve_request(request, pk):
         access_req.status = 'approved'
         access_req.save()
 
-        # In a real app, you'd send an email here with credentials
-        messages.success(request, f"Approved! Account created for {username}. Temp Password: {password}")
+        # Send approval email
+        subject = 'EduStream Access Approved'
+        message = f'Hello {access_req.name},\n\nYour access request to EduStream has been approved!\n\nUsername: {username}\nPassword: {password}\n\nYou can now log in at: {request.build_absolute_uri("/login/")}\n\nBest regards,\nEduStream Team'
+        recipient_list = [access_req.email]
+        
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
+            messages.success(request, f"Approved! Account created and email sent to {access_req.email}.")
+        except Exception as e:
+            messages.warning(request, f"Approved and account created, but email failed: {str(e)}. Password: {password}")
 
     return redirect('cp_requests')
 
@@ -84,7 +95,17 @@ def decline_request(request, pk):
     access_req = get_object_or_404(AccessRequest, pk=pk)
     access_req.status = 'declined'
     access_req.save()
-    messages.info(request, f"Request from {access_req.name} declined.")
+    
+    # Send rejection email
+    subject = 'EduStream Access Request Update'
+    message = f'Hello {access_req.name},\n\nWe regret to inform you that your access request to EduStream has been declined at this time.\n\nBest regards,\nEduStream Team'
+    recipient_list = [access_req.email]
+    
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
+        messages.info(request, f"Request from {access_req.name} declined and email sent.")
+    except Exception as e:
+        messages.warning(request, f"Request declined, but email failed: {str(e)}.")
     return redirect('cp_requests')
 
 

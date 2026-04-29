@@ -2,9 +2,10 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.cache import cache_page
-from .models import Video
+from .models import Video, DownloadLog
 from .services.video_service import VideoService
 from accounts.services.user_service import UserService
+from ratelimit.decorators import ratelimit
 
 @login_required
 @cache_page(60 * 15)
@@ -31,6 +32,7 @@ def video_dashboard(request):
     })
 
 @login_required
+@ratelimit(key='user', rate='10/m', block=True)
 def watch_video(request, video_id):
     """
     Refactored Watch View using Service Layer.
@@ -42,6 +44,9 @@ def watch_video(request, video_id):
     video = get_object_or_404(Video.objects.select_related('category'), id=video_id)
     
     VideoService.record_watch_event(request.user, video)
+    
+    # Log video access for tracking
+    DownloadLog.objects.create(user=request.user, video=video)
     
     return render(request, 'videos/watch.html', {'video': video})
 
