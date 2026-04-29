@@ -27,7 +27,7 @@ class AccessRequest(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('approved', 'Approved'),
-        ('declined', 'Declined'),
+        ('rejected', 'Rejected'),
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)

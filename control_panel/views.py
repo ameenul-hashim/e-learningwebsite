@@ -176,7 +176,7 @@ def decline_request(request, pk):
         return redirect('cp_requests')
 
     try:
-        access_req.status = 'declined'
+        access_req.status = 'rejected'
         access_req.save()
         
         AdminAuditLog.objects.create(
@@ -258,6 +258,7 @@ def create_user_from_request(request, request_id):
                     email=email,
                     password=password,
                     is_verified=True,
+                    is_blocked=False,
                     whatsapp_number=normalize_phone(access_req.whatsapp)
                 )
                 
