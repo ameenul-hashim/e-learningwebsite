@@ -36,11 +36,16 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Production Environment Validation
-if not DEBUG:
-    REQUIRED_ENV_VARS = ['SECRET_KEY', 'DATABASE_URL', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD']
-    missing_vars = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
-    if missing_vars:
-        raise ValueError(f"CRITICAL ERROR: Missing required production environment variables: {', '.join(missing_vars)}")
+if not DEBUG and os.getenv('RENDER'):
+    # Detect if we are in the build phase or runtime
+    # We skip strict database checks during collectstatic to avoid build failures
+    import sys
+    if 'collectstatic' not in sys.argv:
+        REQUIRED_ENV_VARS = ['SECRET_KEY', 'DATABASE_URL', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD']
+        missing_vars = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
+        if missing_vars:
+            raise ValueError(f"CRITICAL ERROR: Missing required production environment variables: {', '.join(missing_vars)}")
+
 
 
 

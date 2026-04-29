@@ -6,7 +6,5 @@ set -o errexit
 pip install -r requirements.txt
 
 # Collect static files
+# We run this during build to ensure static assets are ready
 python manage.py collectstatic --no-input
-
-# Run migrations automatically
-python manage.py migrate
