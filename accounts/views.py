@@ -1,147 +1,55 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login
-from django.contrib.auth.views import LoginView
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .models import AccessRequest
-from .forms import AccessRequestForm, CustomLoginForm
-# from django_ratelimit.decorators import ratelimit
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
+from .forms import SignUpForm, LoginForm
 from .models import User
 
-# def password_setup_view(request, uidb64, token):
-#     """
-#     View for students to set their password for the first time using a secure link.
-#     """
-#     try:
-#         uid = force_str(urlsafe_base64_decode(uidb64))
-#         user = User.objects.get(pk=uid)
-#     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-#         user = None
-# 
-#     # Block if onboarding already completed
-#     if user and user.onboarding_completed:
-#         messages.info(request, "Your account setup is already complete. Please log in.")
-#         return redirect('login')
-# 
-#     if user is not None and default_token_generator.check_token(user, token):
-#         if request.method == 'POST':
-#             password = request.POST.get('password')
-#             confirm_password = request.POST.get('confirm_password')
-# 
-#             if password != confirm_password:
-#                 messages.error(request, "Passwords do not match.")
-#             else:
-#                 import re
-#                 if len(password) < 8:
-#                     messages.error(request, "Password must be at least 8 characters.")
-#                 elif not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password):
-#                     messages.error(request, "Password must include uppercase and numbers.")
-#                 else:
-#                     user.set_password(password)
-#                     user.must_change_password = False
-#                     user.onboarding_completed = True
-#                     user.save()
-#                     
-#                     # Auto-login after successful setup
-#                     auth_login(request, user)
-#                     messages.success(request, "Password set successfully! Welcome to your dashboard.")
-#                     return redirect('dashboard')
-#         
-#         return render(request, 'accounts/password_setup.html', {'user': user, 'valid': True})
-#     else:
-#         return render(request, 'accounts/password_setup.html', {'valid': False})
+def landing_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return redirect('login')
 
-def landing_page(request):
-    """
-    Landing page with access request form.
-    """
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
     if request.method == 'POST':
-        form = AccessRequestForm(request.POST, request.FILES)
+        form = LoginForm(request.POST)
         if form.is_valid():
-            try:
-                form.save()
-                messages.success(request, "Your request has been submitted successfully. We will contact you soon.")
-                return redirect('landing')
-            except Exception as e:
-                messages.error(request, f"An error occurred while saving your proof: {str(e)}. Please try again or contact support.")
-        else:
-            messages.error(request, "Please correct the errors in the form before submitting.")
-    else:
-        form = AccessRequestForm()
-    return render(request, 'accounts/landing.html', {'form': form})
-
-class RestrictedLoginView(LoginView):
-    """
-    Custom login view that checks if user is verified and not blocked.
-    """
-    form_class = CustomLoginForm
-    template_name = 'accounts/login.html'
-
-    # @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
-
-    def form_valid(self, form):
-        user = form.get_user()
-        if not user.is_verified:
-            messages.error(self.request, "Access denied: Your account is not verified.")
-            return self.form_invalid(form)
-        if user.is_blocked:
-            messages.error(self.request, "Access denied: Your account is blocked.")
-            return self.form_invalid(form)
-        
-        try:
-            auth_login(self.request, user)
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
             
-            # Forced Password Change Logic
-            if user.must_change_password:
-                messages.info(self.request, "For your security, please update your username and password before continuing.")
-                return redirect('force_password_change')
-                
-            return redirect(self.get_success_url())
-        except Exception as e:
-            messages.error(self.request, f"Login failed due to a server error: {str(e)}.")
-            return self.form_invalid(form)
-
-@login_required
-def force_password_change(request):
-    if request.method == 'POST':
-        new_username = request.POST.get('username')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        
-        if not new_username:
-            messages.error(request, 'Username is required.')
-        elif password != confirm_password:
-            messages.error(request, 'Passwords do not match.')
-        else:
-            from control_panel.forms import AdminUserCreationForm
-            
-            # Use a dummy instance because username might already exist on another user
-            if User.objects.exclude(pk=request.user.pk).filter(username=new_username).exists():
-                messages.error(request, 'This username is already taken. Please choose another.')
+            if user is not None:
+                if user.status == 'blocked':
+                    messages.error(request, "You are blocked. Contact admin.")
+                elif user.status == 'pending' or not user.is_active:
+                    messages.warning(request, "Your account is under verification.")
+                else:
+                    login(request, user)
+                    return redirect('dashboard')
             else:
-                form = AdminUserCreationForm(data={
-                    'username': new_username, 
-                    'email': request.user.email, 
-                    'password': password
-                })
-                
-                # Bypassing the built-in uniqueness check by manually verifying above
-                # because AdminUserCreationForm might check the db for user creation
-                
-                request.user.username = new_username
-                request.user.set_password(password)
-                request.user.must_change_password = False
-                request.user.onboarding_completed = True
-                request.user.save()
-                
-                update_session_auth_hash(request, request.user)
-                messages.success(request, 'Credentials updated successfully!')
-                return redirect('dashboard')
-    return render(request, 'accounts/force_password_change.html')
+                messages.error(request, "Invalid username or password.")
+    else:
+        form = LoginForm()
+    
+    return render(request, 'accounts/login.html', {'form': form})
+
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        form = SignUpForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Signup successful! Your account is pending approval.")
+            return redirect('login')
+    else:
+        form = SignUpForm()
+    
+    return render(request, 'accounts/signup.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')

@@ -1,117 +1,55 @@
-{% load static %}
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}EduStream - OTT Learning{% endblock %}</title>
-    
-    <!-- Tailwind CSS -->
+    <title>{% block title %}EduStream{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        aqua: {
-                            50: '#f0feff',
-                            100: '#e0f9ff',
-                            200: '#bdf2ff',
-                            300: '#7debff',
-                            400: '#33dcff',
-                            50: '#00f5ff',
-                            600: '#00cce6',
-                            700: '#00a3b8',
-                            800: '#008191',
-                            900: '#066a78',
-                            950: '#024651',
-                        },
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Outfit', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .aqua-gradient { background: linear-gradient(135deg, #00f5ff 0%, #0077ff 100%); }
-        .text-gradient { background: linear-gradient(135deg, #00f5ff 0%, #0077ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body { font-family: 'Inter', sans-serif; }
     </style>
-    
-    {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-[#0a0f18] text-slate-200 min-h-screen flex flex-col">
-    <!-- Navbar -->
-    <nav class="sticky top-0 z-50 glass border-b border-white/10 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{% url 'landing' %}" class="text-2xl font-black italic tracking-tighter text-white">
-                EDU<span class="text-aqua-500">STREAM</span>
-            </a>
-            
-            <div class="flex items-center gap-6">
-                {% if user.is_authenticated %}
-                    <div class="hidden md:flex items-center gap-4 text-sm font-medium">
-                        <a href="{% url 'dashboard' %}" class="hover:text-aqua-400 transition-colors">Dashboard</a>
+<body class="bg-gray-50 text-gray-900">
+    <nav class="bg-white shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-blue-600 tracking-tight">EduStream</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <span class="text-gray-600 text-sm">Hello, {{ user.username }}</span>
                         {% if user.is_staff %}
-                            <a href="{% url 'cp_dashboard' %}" class="text-aqua-400 font-bold">Control Panel</a>
+                            <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Admin Panel</a>
                         {% endif %}
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="hidden lg:block text-xs text-slate-400">Hi, <b>{{ user.username }}</b></span>
-                        <form action="{% url 'logout' %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-xl text-xs font-bold border border-red-500/20 transition-all">Sign Out</button>
-                        </form>
-                    </div>
-                {% else %}
-                    <a href="{% url 'login' %}" class="aqua-gradient text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-aqua-500/20 hover:scale-105 transition-transform">Sign In</a>
-                {% endif %}
+                        <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Dashboard</a>
+                        <a href="{% url 'logout' %}" class="text-red-500 hover:text-red-600 px-3 py-2 text-sm font-medium">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium">Login</a>
+                        <a href="{% url 'signup' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Sign Up</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Global Messages -->
-    {% if messages %}
-    <div class="max-w-7xl mx-auto w-full px-6 mt-4 space-y-2">
-        {% for message in messages %}
-            <div class="p-4 rounded-xl text-sm font-medium border {% if message.tags == 'error' %}bg-red-500/10 border-red-500/20 text-red-400{% else %}bg-green-500/10 border-green-500/20 text-green-400{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-    <!-- Main Content -->
-    <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-white/5 py-10 px-6 mt-20">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="text-xl font-bold text-white mb-4 italic">EDU<span class="text-aqua-500">STREAM</span></div>
-            <p class="text-slate-500 text-sm">&copy; 2026 Calicut University Unofficial Notes And Classes. All Rights Reserved.</p>
+    <footer class="bg-white border-t border-gray-100 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            &copy; 2026 EduStream Platform. All rights reserved.
         </div>
     </footer>
-
-    <script>
-        // Disable right-click for content protection
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        
-        // Prevent keyboard shortcuts for inspection
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false;
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
-            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        };
-    </script>
 </body>
 </html>
-

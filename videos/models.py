@@ -1,26 +1,23 @@
 import re
 from django.db import models
-from django.conf import settings
 
-class Category(models.Model):
+class Subject(models.Model):
     """
-    Model for video categories.
+    Model for e-learning subjects.
     """
-    name = models.CharField(max_length=100, db_index=True)
-
-    class Meta:
-        verbose_name_plural = "Categories"
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
 class Video(models.Model):
     """
-    Model for storing YouTube video links with category grouping.
+    Model for storing YouTube video links under a subject.
     """
-    title = models.CharField(max_length=255, db_index=True)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='videos')
+    title = models.CharField(max_length=255)
     youtube_url = models.URLField()
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, related_name='videos', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -48,55 +45,3 @@ class Video(models.Model):
         if video_id:
             return f"https://www.youtube.com/embed/{video_id}"
         return self.youtube_url
-
-    @property
-    def thumbnail_url(self):
-        video_id = self.youtube_id
-        if video_id:
-            return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
-        return ""
-
-class WatchHistory(models.Model):
-    """
-    Tracks which videos a user has watched.
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    video = models.ForeignKey(Video, on_delete=models.CASCADE)
-    watched_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name_plural = "Watch Histories"
-        unique_together = ('user', 'video')
-        ordering = ['-watched_at']
-
-    def __str__(self):
-        return f"{self.user.username} watched {self.video.title}"
-
-class DownloadLog(models.Model):
-    """
-    Tracks each time a user accesses a video for download or watching.
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    video = models.ForeignKey(Video, on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    class Meta:
-        ordering = ['-timestamp']
-
-    def __str__(self):
-        return f"{self.user.username} - {self.video.title} - {self.timestamp}"
-
-class VideoWatchLog(models.Model):
-    """
-    Detailed log for user engagement with videos.
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    video = models.ForeignKey(Video, on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-
-    class Meta:
-        ordering = ['-timestamp']
-
-    def __str__(self):
-        return f"{self.user.username} - {self.video.title} - {self.timestamp}"

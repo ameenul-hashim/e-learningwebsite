@@ -1,8 +1,8 @@
 from django.urls import path
-from .views import video_dashboard, watch_video, subject_videos
+from . import views
 
 urlpatterns = [
-    path('dashboard/', video_dashboard, name='dashboard'),
-    path('watch/<int:video_id>/', watch_video, name='watch_video'),
-    path('subject/<int:category_id>/', subject_videos, name='subject_videos'),
+    path('', views.dashboard_view, name='dashboard'),
+    path('subject/<int:subject_id>/', views.subject_detail_view, name='subject_detail'),
+    path('video/<int:video_id>/', views.video_detail_view, name='video_detail'),
 ]
