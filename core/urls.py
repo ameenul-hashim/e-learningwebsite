@@ -10,6 +10,9 @@ from videos.api_views import VideoViewSet, CategoryViewSet
 def health_check(request):
     from django.db import connections
     from django.db.utils import OperationalError
+    from django.core.cache import cache
+    
+    # Check Database
     db_conn = connections['default']
     try:
         db_conn.cursor()
@@ -17,10 +20,21 @@ def health_check(request):
     except OperationalError:
         db_status = "unavailable"
     
+    # Check Cache (Redis)
+    try:
+        cache.set('health_check', 'ok', timeout=10)
+        cache_val = cache.get('health_check')
+        cache_status = "connected" if cache_val == 'ok' else "unavailable"
+    except Exception:
+        cache_status = "unavailable"
+    
+    status_code = 200 if db_status == "connected" else 503
+    
     return JsonResponse({
-        "status": "healthy" if db_status == "connected" else "partially_degraded",
-        "database": db_status
-    }, status=200 if db_status == "connected" else 503)
+        "status": "healthy" if (db_status == "connected" and cache_status == "connected") else "degraded",
+        "database": db_status,
+        "cache": cache_status
+    }, status=status_code)
 
 router = DefaultRouter()
 router.register(r'videos', VideoViewSet)
