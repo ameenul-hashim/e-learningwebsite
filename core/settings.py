@@ -100,10 +100,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # DATABASES = {
 import dj_database_url
 
-# Force PostgreSQL in production
+# Force PostgreSQL in production (Resilient check)
 DATABASE_URL = os.getenv('DATABASE_URL')
-if not DATABASE_URL and not DEBUG:
-    raise Exception("DATABASE_URL must be set in production environment.")
 
 DATABASES = {
     'default': dj_database_url.config(
@@ -112,6 +110,9 @@ DATABASES = {
         ssl_require=bool(DATABASE_URL)
     )
 }
+
+if not DATABASES['default'].get('ENGINE') and not DEBUG:
+    raise Exception("Database configuration failed. Ensure DATABASE_URL is set in production.")
 
 # Security and Session Management
 SESSION_COOKIE_SECURE = not DEBUG
