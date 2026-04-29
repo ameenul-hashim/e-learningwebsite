@@ -1,112 +1,27 @@
 {% extends 'base.html' %}
-
-{% block title %}Sign Up - EduStream{% endblock %}
-
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Create Account</h1>
-        <p class="text-gray-500 mt-2">Join our learning platform and start growing</p>
-    </div>
-
-    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+<div class="max-w-md mx-auto bg-white p-10 rounded-3xl shadow-sm border border-slate-100 mt-12">
+    <h1 class="text-3xl font-black mb-6">Join Us</h1>
+    <form method="POST" class="space-y-4">
         {% csrf_token %}
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                {{ form.first_name }}
-                {% if form.first_name.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
-                {% endif %}
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ form.username.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
-                {% endif %}
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                {{ form.contact_number }}
-                {% if form.contact_number.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ form.contact_number.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <div class="relative">
-                    <input type="password" name="password" id="id_password" required
-                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                           placeholder="••••••••">
-                    <button type="button" onclick="togglePassword('id_password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
-                        <svg class="h-5 w-5 text-gray-400 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                    </button>
-                </div>
-                {% if form.password.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ form.password.errors.0 }}</p>
-                {% endif %}
-            </div>
-            <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                <div class="relative">
-                    <input type="password" name="confirm_password" id="id_confirm_password" required
-                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                           placeholder="••••••••">
-                    <button type="button" onclick="togglePassword('id_confirm_password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
-                        <svg class="h-5 w-5 text-gray-400 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                    </button>
-                </div>
-                {% if form.confirm_password.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ form.confirm_password.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Proof (PDF/Image)</label>
-            {{ form.proof_file }}
-            <p class="text-gray-400 text-xs mt-1">Please upload a valid ID or document for verification.</p>
-            {% if form.proof_file.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.proof_file.errors.0 }}</p>
-            {% endif %}
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Full Name</label>
+            <input type="text" name="first_name" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
         </div>
-
-        <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition transform hover:scale-[1.01] active:scale-100">
-            Create Account
-        </button>
+        <div>
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Username</label>
+            <input type="text" name="username" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
+        </div>
+        <div>
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Email</label>
+            <input type="email" name="email" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
+        </div>
+        <div>
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Password</label>
+            <input type="password" name="password" class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" required>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700">Create Account</button>
     </form>
-
-    <div class="mt-8 text-center border-t border-gray-100 pt-6">
-        <p class="text-gray-600">Already have an account? <a href="{% url 'login' %}" class="text-blue-600 font-medium hover:underline">Sign In</a></p>
-    </div>
+    <p class="mt-6 text-center text-sm text-slate-500">Have account? <a href="{% url 'login' %}" class="text-blue-600 font-bold">Log in</a></p>
 </div>
-
-<script>
-function togglePassword(id) {
-    const input = document.getElementById(id);
-    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-    input.setAttribute('type', type);
-}
-</script>
 {% endblock %}

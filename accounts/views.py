@@ -1,63 +1,39 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib import messages
-from .forms import SignUpForm, LoginForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User
 
-def landing_view(request):
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            return redirect('admin_dashboard')
-        return redirect('dashboard')
-    return redirect('login')
-
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            
-            if user is not None:
-                # Admins bypass approval constraints
-                if user.is_staff:
-                    login(request, user)
-                    return redirect('admin_dashboard')
-                
-                # Student approval logic
-                if user.status == 'blocked':
-                    messages.error(request, "Your account has been blocked. Please contact support.")
-                elif user.status == 'pending' or not user.is_active:
-                    messages.warning(request, "Your account is currently under verification by our team.")
-                else:
-                    login(request, user)
-                    return redirect('dashboard')
-            else:
-                messages.error(request, "The credentials provided do not match our records.")
+            user = form.get_user()
+            auth_login(request, user)
+            if user.is_staff:
+                return redirect('admin_dashboard')
+            return redirect('dashboard')
     else:
-        form = LoginForm()
-    
+        form = AuthenticationForm()
     return render(request, 'accounts/login.html', {'form': form})
 
 def signup_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-        
     if request.method == 'POST':
-        form = SignUpForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Signup successful! Your account is pending approval.")
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name')
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken.")
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name)
+            user.status = 'approved'
+            user.save()
+            messages.success(request, "Account created! Please log in.")
             return redirect('login')
-    else:
-        form = SignUpForm()
-    
-    return render(request, 'accounts/signup.html', {'form': form})
+    return render(request, 'accounts/signup.html')
 
 def logout_view(request):
-    logout(request)
+    auth_logout(request)
     return redirect('login')
