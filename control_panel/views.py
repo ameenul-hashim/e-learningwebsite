@@ -53,81 +53,36 @@ def manage_requests(request):
 @cp_admin_required
 def approve_request(request, pk):
     """
-    Approve an access request, automatically create a user, and notify them.
+    Step 1: Approve an access request and redirect to user creation.
     """
-    from django.utils.crypto import get_random_string
-    
     access_req = get_object_or_404(AccessRequest, pk=pk)
     
     if access_req.status == 'approved':
-        messages.info(request, f"Request from {access_req.email} was already approved.")
-        return redirect('cp_requests')
-
-    # Check for duplicate email
-    if User.objects.filter(email=access_req.email).exists():
-        access_req.status = 'approved' # Sync status anyway
-        access_req.save()
-        messages.warning(request, f"User with email {access_req.email} already exists. Skipping user creation.")
+        messages.info(request, "This request is already approved.")
         return redirect('cp_requests')
 
     try:
-        # Generate safe password and unique username
-        generated_password = get_random_string(12)
-        base_username = access_req.name.lower().replace(' ', '_')[:20]
-        username = base_username
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}{counter}"
-            counter += 1
-
-        # Create user
-        user = User.objects.create_user(
-            username=username,
-            email=access_req.email,
-            password=generated_password,
-            is_verified=True
-        )
-        
         access_req.status = 'approved'
         access_req.save()
-
-        # Log action
+        
         AdminAuditLog.objects.create(
             admin_user=request.user,
-            action="Approved & Created User",
-            details=f"Approved {access_req.email}, Created user: {username}"
-        )
-
-        # Step 2 Email: Credentials
-        subject = 'EduStream: Your Account is Ready'
-        login_url = request.build_absolute_uri("/login/")
-        message = (
-            f"Hello {access_req.name},\n\n"
-            f"Your access request to EduStream has been approved. Your account has been created successfully.\n\n"
-            f"Login Credentials:\n"
-            f"Username: {username}\n"
-            f"Password: {generated_password}\n\n"
-            f"Login here: {login_url}\n\n"
-            f"Best regards,\nEduStream Team"
+            action="Approved Request (Step 1)",
+            details=f"Approved access for {access_req.email}"
         )
         
-        try:
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
-            messages.success(request, f"User '{username}' created and credentials sent to {access_req.email}.")
-        except Exception as e:
-            messages.warning(request, f"User created ({username}), but email failed to send: {str(e)}")
-
+        messages.success(request, f"Request for {access_req.name} approved. Please complete account creation.")
+        return redirect('cp_create_user_from_request', request_id=access_req.pk)
+        
     except Exception as e:
-        messages.error(request, f"Critical error during approval: {str(e)}")
+        messages.error(request, f"Error approving request: {str(e)}")
         return redirect('cp_requests')
-
-    return redirect('cp_requests')
 
 
 @cp_admin_required
 def decline_request(request, pk):
     """
-    Decline an access request safely.
+    Decline an access request safely with custom message.
     """
     access_req = get_object_or_404(AccessRequest, pk=pk)
     
@@ -139,7 +94,6 @@ def decline_request(request, pk):
         access_req.status = 'declined'
         access_req.save()
         
-        # Log action
         AdminAuditLog.objects.create(
             admin_user=request.user,
             action="Declined Request",
@@ -148,7 +102,11 @@ def decline_request(request, pk):
         
         # Send rejection email
         subject = 'EduStream Access Request Update'
-        message = f"Hello {access_req.name},\n\nWe regret to inform you that your access request to EduStream has been declined at this time.\n\nBest regards,\nEduStream Team"
+        message = (
+            f"Hello {access_req.name},\n\n"
+            "Your verification failed. Your proof is not sufficient for access.\n\n"
+            "Best regards,\nEduStream Team"
+        )
         
         try:
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [access_req.email])
@@ -159,7 +117,80 @@ def decline_request(request, pk):
     except Exception as e:
         messages.error(request, f"Error processing decline: {str(e)}")
 
-    return redirect('cp_requests')
+    return redirect('cp_dashboard')
+
+
+@cp_admin_required
+def create_user_from_request(request, request_id):
+    """
+    Step 2: Dedicated page to create user from an approved request.
+    """
+    from .forms import AdminUserCreationForm
+    access_req = get_object_or_404(AccessRequest, pk=request_id)
+    
+    if access_req.status != 'approved':
+        messages.error(request, "This request must be approved before creating a user.")
+        return redirect('cp_requests')
+
+    if request.method == 'POST':
+        form = AdminUserCreationForm(request.POST)
+        if form.is_valid():
+            try:
+                username = form.cleaned_data['username']
+                email = form.cleaned_data['email']
+                password = form.cleaned_data['password']
+                
+                # Double check existence (forms.ModelForm handles some, but let's be safe)
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, f"User with email {email} already exists.")
+                    return render(request, 'control_panel/create_user_from_request.html', {'form': form, 'req': access_req})
+
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    is_verified=True
+                )
+                
+                # Send credentials email
+                subject = 'EduStream: Your Account is Ready'
+                login_url = request.build_absolute_uri("/login/")
+                message = (
+                    f"Hello {access_req.name},\n\n"
+                    "Your EduStream account has been created successfully.\n\n"
+                    f"Login Credentials:\n"
+                    f"Username: {username}\n"
+                    f"Password: {password}\n\n"
+                    f"Login here: {login_url}\n\n"
+                    "Best regards,\nEduStream Team"
+                )
+                
+                try:
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+                    messages.success(request, f"Account for {username} created and credentials sent.")
+                except Exception as e:
+                    messages.warning(request, f"Account created, but email failed: {str(e)}")
+
+                AdminAuditLog.objects.create(
+                    admin_user=request.user,
+                    action="Completed User Creation",
+                    details=f"Created user {username} for approved request {email}"
+                )
+                return redirect('cp_dashboard')
+                
+            except Exception as e:
+                messages.error(request, f"Database error during user creation: {str(e)}")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field.capitalize()}: {error}")
+    else:
+        form = AdminUserCreationForm(initial={'email': access_req.email})
+        
+    return render(request, 'control_panel/create_user_from_request.html', {
+        'form': form,
+        'req': access_req
+    })
 
 
 @cp_admin_required
