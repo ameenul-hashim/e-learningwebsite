@@ -185,26 +185,24 @@ CELERY_TASK_ALWAYS_EAGER = not bool(CELERY_BROKER_URL)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
-# Logging Configuration (Structured for Observability)
+# Logging Configuration (Structured for Production Observability)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'json_style': {
-            'format': '[%(asctime)s] %(levelname)s [REQ:%(request_id)s] [%(name)s] %(message)s',
-            'datefmt': '%d/%b/%Y %H:%M:%S'
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
         },
-    },
-    'filters': {
-        'request_id': {
-            '()': 'core.middleware.observability.RequestIDFilter',
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
         },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'json_style',
-            'filters': ['request_id'],
+            'formatter': 'simple',
         },
     },
     'root': {
@@ -212,10 +210,19 @@ LOGGING = {
         'level': 'INFO',
     },
     'loggers': {
-        'django': { 'handlers': ['console'], 'level': 'INFO', 'propagate': True },
-        'production': { 'handlers': ['console'], 'level': 'INFO', 'propagate': False },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'production': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
 
 # Django REST Framework Configuration (Performance Optimized)
 from datetime import timedelta
