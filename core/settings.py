@@ -109,3 +109,18 @@ LOGOUT_REDIRECT_URL = 'login'
 # Security settings
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 X_FRAME_OPTIONS = 'SAMEORIGIN' # Allow iframe embedding for our own videos if needed
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}

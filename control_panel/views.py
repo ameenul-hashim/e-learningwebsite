@@ -23,9 +23,9 @@ def admin_login(request):
                 auth_login(request, user)
                 return redirect('admin_dashboard')
             else:
-                messages.error(request, "Access denied. Not an administrator.")
+                messages.error(request, "Insufficient permissions: This portal is for administrators only.")
         else:
-            messages.error(request, "Invalid administrator credentials.")
+            messages.error(request, "Access denied: Invalid administrator credentials.")
     else:
         form = AuthenticationForm()
     

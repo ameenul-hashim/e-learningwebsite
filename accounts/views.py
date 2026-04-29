@@ -6,6 +6,8 @@ from .models import User
 
 def landing_view(request):
     if request.user.is_authenticated:
+        if request.user.is_staff:
+            return redirect('admin_dashboard')
         return redirect('dashboard')
     return redirect('login')
 
@@ -21,17 +23,21 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             
             if user is not None:
+                # Admins bypass approval constraints
+                if user.is_staff:
+                    login(request, user)
+                    return redirect('admin_dashboard')
+                
+                # Student approval logic
                 if user.status == 'blocked':
-                    messages.error(request, "You are blocked. Contact admin.")
+                    messages.error(request, "Your account has been blocked. Please contact support.")
                 elif user.status == 'pending' or not user.is_active:
-                    messages.warning(request, "Your account is under verification.")
+                    messages.warning(request, "Your account is currently under verification by our team.")
                 else:
                     login(request, user)
-                    if user.is_staff:
-                        return redirect('admin_dashboard')
                     return redirect('dashboard')
             else:
-                messages.error(request, "Invalid username or password.")
+                messages.error(request, "The credentials provided do not match our records.")
     else:
         form = LoginForm()
     
