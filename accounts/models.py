@@ -52,3 +52,19 @@ class AdminAuditLog(models.Model):
     def __str__(self):
         return f"{self.admin_user} - {self.action} - {self.timestamp}"
 
+class NotificationLog(models.Model):
+    """
+    Tracks success or failure of email notifications for administrative review.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    email = models.EmailField()
+    notification_type = models.CharField(max_length=50) # 'setup', 'rejection', 'reset'
+    status = models.CharField(max_length=20, choices=(('sent', 'Sent'), ('failed', 'Failed')), default='sent')
+    error_message = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.notification_type} to {self.email} - {self.status}"

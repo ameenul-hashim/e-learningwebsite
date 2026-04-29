@@ -2,7 +2,7 @@ import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from accounts.models import AccessRequest, User, AdminAuditLog
+from accounts.models import AccessRequest, User, AdminAuditLog, NotificationLog
 from videos.models import Video, Category
 from django.core.mail import send_mail
 from django.conf import settings
@@ -31,16 +31,35 @@ def send_setup_email(username, email, password, is_reset=False):
             f"Best regards,\nEduStream Team"
         )
         def send_async():
+            # Create a log entry early
+            log = NotificationLog.objects.create(
+                email=email,
+                notification_type='reset' if is_reset else 'setup',
+                status='failed' # assume failed until sent
+            )
             try:
-                send_mail(
+                user_obj = User.objects.filter(username=username).first()
+                if user_obj:
+                    log.user = user_obj
+
+                success = send_mail(
                     subject, 
                     email_message, 
                     settings.DEFAULT_FROM_EMAIL, 
                     [email],
-                    fail_silently=True
+                    fail_silently=False # fail_silently=False inside thread to catch error
                 )
+                if success:
+                    log.status = 'sent'
+                else:
+                    log.status = 'failed'
+                    log.error_message = "SMTP returned 0 (not sent)"
             except Exception as e:
+                log.status = 'failed'
+                log.error_message = str(e)
                 print(f"Async Email Error: {str(e)}")
+            finally:
+                log.save()
 
         import threading
         thread = threading.Thread(target=send_async)
@@ -57,8 +76,13 @@ def send_rejection_email(email):
     """
     try:
         def send_async():
+            log = NotificationLog.objects.create(
+                email=email,
+                notification_type='rejection',
+                status='failed'
+            )
             try:
-                send_mail(
+                success = send_mail(
                     "EduStream Access Request",
                     "Dear Student,\n\n"
                     "Your access request was declined.\n"
@@ -67,10 +91,19 @@ def send_rejection_email(email):
                     "Regards,\nEduStream Team",
                     settings.DEFAULT_FROM_EMAIL,
                     [email],
-                    fail_silently=True,
+                    fail_silently=False,
                 )
+                if success:
+                    log.status = 'sent'
+                else:
+                    log.status = 'failed'
+                    log.error_message = "SMTP returned 0"
             except Exception as e:
+                log.status = 'failed'
+                log.error_message = str(e)
                 print(f"Async Email Rejection Error: {str(e)}")
+            finally:
+                log.save()
         
         import threading
         thread = threading.Thread(target=send_async)
