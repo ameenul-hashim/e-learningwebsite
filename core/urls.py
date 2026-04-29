@@ -8,6 +8,7 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('dashboard/', include('videos.urls')),
     path('control-panel/', include('control_panel.urls')),
+    path('health/', lambda r: __import__('django.http', fromlist=['HttpResponse']).HttpResponse('OK'), name='health'),
 ]
 
 if settings.DEBUG:
